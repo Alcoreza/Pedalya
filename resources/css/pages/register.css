@@ -368,33 +368,6 @@ body.register-page {
     font-size: 0.58rem;
 }
 
-.register-consent {
-    display: inline-flex;
-    width: fit-content;
-    cursor: pointer;
-    align-items: center;
-    gap: 0.65rem;
-}
-
-.register-consent input { position: absolute; opacity: 0; pointer-events: none; }
-
-.register-consent > span {
-    display: grid;
-    width: 1.05rem;
-    height: 1.05rem;
-    flex: 0 0 auto;
-    place-items: center;
-    border: 1px solid var(--color-line);
-    background: var(--color-canvas);
-    transition: background-color 180ms ease, border-color 180ms ease;
-}
-
-.register-consent svg { width: 0.7rem; fill: none; stroke: transparent; stroke-width: 2; }
-.register-consent input:checked + span { border-color: var(--color-brand); background: var(--color-brand); }
-.register-consent input:checked + span svg { stroke: white; }
-.register-consent small { color: var(--color-muted); font-size: 0.62rem; }
-.register-terms-error { margin-top: -1rem; }
-
 .register-submit {
     display: flex;
     min-height: 3.55rem;

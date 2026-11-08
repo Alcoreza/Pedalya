@@ -133,13 +133,6 @@
                         </div>
                     </div>
 
-                    <label class="register-consent">
-                        <input type="checkbox" name="terms" value="1" required>
-                        <span aria-hidden="true"><svg viewBox="0 0 16 16"><path d="m3 8 3 3 7-7"></path></svg></span>
-                        <small>I agree to Pedalya’s terms and privacy policy.</small>
-                    </label>
-                    <small class="register-error register-terms-error" data-error-for="terms"></small>
-
                     <button class="register-submit" type="submit">
                         <span>Create account</span>
                         <i aria-hidden="true">↗</i>

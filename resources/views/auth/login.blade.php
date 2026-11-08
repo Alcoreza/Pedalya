@@ -31,7 +31,6 @@
                 <div class="login-story-copy login-sequence" style="--login-delay: 120ms">
                     <span class="login-story-kicker">Your repair journey</span>
                     <h1>Every repair has a clear next step.</h1>
-                    <p>Return to your account to keep bookings, schedules, and repair information within reach.</p>
                 </div>
 
                 <div class="repair-route login-sequence" style="--login-delay: 260ms" aria-hidden="true">
@@ -117,15 +116,6 @@
                                 </button>
                             </div>
                             <span class="field-error" data-error-for="password"></span>
-                        </div>
-
-                        <div class="login-options">
-                            <label class="remember-control">
-                                <input name="remember" type="checkbox">
-                                <span aria-hidden="true"><svg viewBox="0 0 16 16"><path d="m3 8 3 3 7-7"></path></svg></span>
-                                Keep me signed in
-                            </label>
-                            <span class="forgot-placeholder" title="Password recovery will be connected with authentication">Forgot password?</span>
                         </div>
 
                         <button class="login-submit" type="submit">

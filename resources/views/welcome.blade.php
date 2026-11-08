@@ -66,11 +66,6 @@
 
                 <div class="page-shell hero-grid">
                     <div class="hero-copy">
-                        <div class="eyebrow hero-enter" style="--enter-delay: 80ms">
-                            <span class="eyebrow-dot"></span>
-                            Bike care, without the back-and-forth
-                        </div>
-
                         <h1 class="hero-enter" style="--enter-delay: 160ms">
                             Book smarter.<br>
                             <span>Ride sooner.</span>
