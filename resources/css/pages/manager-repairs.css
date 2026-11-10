@@ -1,0 +1,230 @@
+@import './manager-dashboard.css';
+
+.manager-repairs-page {
+    --repair-paper: #f8f8f2;
+    --repair-grid: rgba(31, 100, 84, 0.065);
+}
+
+.manager-repairs-page .manager-main { padding-bottom: 4rem; }
+
+.repair-notice {
+    display: grid;
+    min-height: 3.6rem;
+    align-items: center;
+    grid-template-columns: 1.8rem 1fr auto;
+    gap: 0.7rem;
+    margin-top: 1rem;
+    padding: 0.7rem 0.8rem;
+    border: 1px solid rgba(31, 100, 84, 0.16);
+    border-radius: 0.85rem;
+    background: rgba(255, 255, 255, 0.76);
+    color: var(--color-ink-soft);
+    box-shadow: 0 12px 30px rgba(12, 40, 34, 0.06);
+}
+
+.repair-notice > span { display: grid; width: 1.8rem; height: 1.8rem; place-items: center; border-radius: 50%; background: #dff3e7; color: var(--color-success); font-size: 0.68rem; font-weight: 800; }
+.repair-notice p { margin: 0; font-size: 0.62rem; line-height: 1.55; }
+.repair-notice button { cursor: pointer; border: 0; background: transparent; color: var(--color-muted); font-size: 1.05rem; }
+
+.repairs-intro {
+    display: grid;
+    align-items: end;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 3rem;
+    padding: clamp(3.2rem, 7vw, 6.4rem) 0 clamp(2.2rem, 4vw, 3.6rem);
+}
+
+.repairs-intro > div:first-child > span,
+.ledger-heading > div > span,
+.inspector-heading > div > span,
+.audit-trail > div > span,
+.completion-action > div > span {
+    color: var(--color-brand);
+    font-size: 0.5rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.repairs-intro h1 { margin: 0.7rem 0 0; font-size: clamp(4rem, 7vw, 6.8rem); font-weight: 500; letter-spacing: -0.085em; line-height: 0.79; }
+.repairs-intro h1 em { color: var(--color-brand); font-family: Georgia, 'Times New Roman', serif; font-weight: 400; }
+
+.intro-rule { display: grid; grid-template-columns: 4rem 1fr; gap: 1rem; padding-bottom: 0.6rem; }
+.intro-rule i { position: relative; height: 1px; margin-top: 0.55rem; background: var(--color-brand); }
+.intro-rule i::after { position: absolute; top: -0.22rem; right: 0; width: 0.45rem; height: 0.45rem; border-radius: 50%; background: var(--color-accent); content: ''; animation: rule-pulse 2.4s ease-in-out infinite; }
+.intro-rule p { max-width: 27rem; margin: 0; color: var(--color-muted); font-size: 0.66rem; line-height: 1.75; }
+
+.repair-summary { display: grid; grid-template-columns: repeat(4, 1fr); overflow: hidden; border: 1px solid rgba(16, 32, 27, 0.1); border-radius: 1rem; background: rgba(255, 255, 255, 0.45); }
+.repair-summary article { display: grid; min-height: 6.3rem; align-content: center; grid-template-columns: 1fr auto; gap: 0.25rem 0.7rem; padding: 1rem 1.15rem; border-right: 1px solid rgba(16, 32, 27, 0.09); }
+.repair-summary article:last-child { border-right: 0; }
+.repair-summary span { color: var(--color-muted); font-size: 0.52rem; }
+.repair-summary strong { grid-row: span 2; font-size: 1.8rem; font-weight: 500; letter-spacing: -0.07em; }
+.repair-summary small { color: rgba(81, 96, 89, 0.68); font-size: 0.43rem; }
+.repair-summary .summary-unrecorded { background: #fff6df; }
+.repair-summary .summary-unrecorded strong { color: #a26a18; }
+.repair-summary .summary-completed { background: var(--color-brand-deep); }
+.repair-summary .summary-completed span, .repair-summary .summary-completed small { color: rgba(255, 255, 255, 0.52); }
+.repair-summary .summary-completed strong { color: var(--color-accent); }
+
+.repair-filters { display: grid; align-items: center; grid-template-columns: minmax(13rem, 0.8fr) 1fr auto; gap: 0.7rem; margin: 1rem 0 2.4rem; padding: 0.7rem; border-radius: 0.9rem; background: rgba(255, 255, 255, 0.7); box-shadow: 0 14px 35px rgba(12, 40, 34, 0.05); }
+.repair-filters > label { display: grid; min-height: 2.8rem; align-items: center; grid-template-columns: 1.1rem 1fr; gap: 0.6rem; padding: 0 0.75rem; border: 1px solid var(--color-line); border-radius: 0.65rem; background: var(--repair-paper); }
+.repair-filters > label:focus-within { border-color: var(--color-brand); box-shadow: 0 0 0 3px rgba(31, 100, 84, 0.08); }
+.repair-filters svg { width: 1rem; fill: none; stroke: var(--color-muted); stroke-width: 1.7; }
+.repair-filters input { min-width: 0; border: 0; outline: 0; background: transparent; color: var(--color-ink); font-size: 0.58rem; }
+.repair-filters > div { display: flex; align-items: center; gap: 0.25rem; }
+.repair-filters > div a { min-height: 2.25rem; padding: 0 0.7rem; display: inline-flex; align-items: center; border-radius: 999px; color: var(--color-muted); font-size: 0.5rem; font-weight: 700; text-decoration: none; white-space: nowrap; }
+.repair-filters > div a.is-active { background: var(--color-brand-deep); color: white; }
+.repair-filters > button { min-height: 2.8rem; padding-inline: 1rem; cursor: pointer; border: 0; border-radius: 0.65rem; background: var(--color-brand); color: white; font: inherit; font-size: 0.54rem; font-weight: 800; }
+.repair-filters > button span { margin-left: 0.8rem; color: var(--color-accent); }
+
+.repairs-workspace { display: grid; align-items: start; grid-template-columns: minmax(31rem, 0.9fr) minmax(25rem, 1.1fr); gap: clamp(1.2rem, 2.5vw, 2.5rem); }
+.ledger-heading { display: flex; align-items: end; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+.ledger-heading h2 { margin: 0.25rem 0 0; font-size: 1.6rem; font-weight: 500; letter-spacing: -0.055em; }
+.ledger-heading small { color: var(--color-muted); font-size: 0.48rem; }
+.repair-tickets { display: grid; gap: 0.55rem; }
+
+.repair-ticket { position: relative; display: grid; min-height: 6.2rem; align-items: center; grid-template-columns: 2.5rem minmax(9rem, 1fr) minmax(8rem, 0.75fr) auto 1rem; gap: 0.8rem; padding: 0.8rem; overflow: hidden; border: 1px solid rgba(16, 32, 27, 0.09); border-radius: 0.45rem 1.1rem 0.45rem 1.1rem; background: rgba(255, 255, 255, 0.52); color: var(--color-ink); text-decoration: none; transition: transform 220ms var(--ease-out), background-color 180ms ease, box-shadow 200ms ease; }
+.repair-ticket::before { position: absolute; top: 0; bottom: 0; left: 0; width: 0.2rem; background: #b4bdb8; content: ''; }
+.repair-ticket:hover { transform: translateY(-2px); background: white; box-shadow: 0 14px 28px rgba(12, 40, 34, 0.07); }
+.repair-ticket.is-selected { background: white; box-shadow: inset 0 0 0 1px var(--color-brand); }
+.repair-ticket.is-completed::before { background: var(--color-success); }
+.repair-ticket.is-unrecorded::before { background: var(--color-warning); }
+.ticket-index { color: rgba(81, 96, 89, 0.48); font-family: Georgia, 'Times New Roman', serif; font-size: 1.2rem; }
+.ticket-copy { display: grid; gap: 0.15rem; }
+.ticket-copy > span { color: var(--color-brand); font-size: 0.46rem; font-weight: 800; }
+.ticket-copy h3 { margin: 0; font-size: 0.68rem; font-weight: 700; }
+.ticket-copy p { margin: 0; color: var(--color-muted); font-size: 0.48rem; }
+.ticket-date { display: grid; gap: 0.2rem; }
+.ticket-date span { color: var(--color-muted); font-size: 0.44rem; }
+.ticket-date time { font-size: 0.5rem; font-weight: 700; }
+.ticket-status { display: inline-flex; min-height: 1.8rem; align-items: center; padding-inline: 0.65rem; border-radius: 999px; font-size: 0.46rem; font-weight: 800; white-space: nowrap; }
+.status-completed { background: #dff3e7; color: var(--color-success); }
+.status-unrecorded { background: #fff1cf; color: #9a6415; }
+.repair-ticket > svg { width: 0.85rem; fill: none; stroke: var(--color-muted); stroke-width: 1.7; }
+
+.repair-inspector { position: relative; overflow: hidden; border: 1px solid rgba(16, 32, 27, 0.1); border-radius: 1.8rem 0.45rem 1.8rem 0.45rem; background: var(--repair-paper); box-shadow: 0 24px 65px rgba(12, 40, 34, 0.1); }
+.inspector-grid { position: absolute; inset: 0; background-image: linear-gradient(var(--repair-grid) 1px, transparent 1px), linear-gradient(90deg, var(--repair-grid) 1px, transparent 1px); background-size: 2.5rem 2.5rem; mask-image: linear-gradient(to bottom, black, transparent 55%); pointer-events: none; }
+.inspector-heading, .repair-customer, .repair-service-card, .repair-status-grid, .audit-trail, .completion-action, .completion-recorded { position: relative; }
+.inspector-heading { display: flex; align-items: start; justify-content: space-between; gap: 1rem; padding: 1.4rem 1.5rem 1rem; }
+.inspector-heading h2 { margin: 0.3rem 0 0; font-size: 1.85rem; font-weight: 500; letter-spacing: -0.06em; }
+.completion-stamp { display: grid; width: 5.7rem; height: 5.7rem; place-content: center; transform: rotate(7deg); border: 2px solid var(--color-success); border-radius: 50%; color: var(--color-success); text-align: center; }
+.completion-stamp span { font-size: 0.42rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; }
+.completion-stamp strong { font-family: Georgia, 'Times New Roman', serif; font-size: 0.8rem; font-style: italic; }
+.unrecorded-mark { display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.55rem 0.65rem; border-radius: 999px; background: #fff1cf; color: #9a6415; font-size: 0.46rem; font-weight: 800; }
+.unrecorded-mark i { width: 0.45rem; height: 0.45rem; border-radius: 50%; background: var(--color-warning); animation: unrecorded-pulse 2s ease-in-out infinite; }
+
+.repair-customer { display: grid; align-items: center; grid-template-columns: 3.25rem 1fr; gap: 0.8rem; margin: 0 1.5rem; padding: 1rem 0; border-top: 1px solid var(--color-line); border-bottom: 1px solid var(--color-line); }
+.repair-customer > span { display: grid; width: 3.25rem; height: 3.25rem; place-items: center; border-radius: 0.7rem 1.2rem 0.7rem 1.2rem; background: var(--color-brand-deep); color: var(--color-accent); font-size: 0.7rem; font-weight: 800; }
+.repair-customer > div { display: grid; gap: 0.15rem; min-width: 0; }
+.repair-customer strong { font-size: 0.7rem; }
+.repair-customer a { overflow: hidden; color: var(--color-muted); font-size: 0.48rem; text-decoration: none; text-overflow: ellipsis; white-space: nowrap; }
+.repair-customer a:hover { color: var(--color-brand); }
+
+.repair-service-card { display: grid; gap: 0.3rem; margin: 1rem 1.5rem 0; padding: 1rem; border-left: 0.22rem solid var(--color-accent); background: var(--color-brand-deep); color: white; }
+.repair-service-card span { color: rgba(255, 255, 255, 0.48); font-size: 0.44rem; }
+.repair-service-card strong { font-size: 0.76rem; }
+.repair-service-card time { color: rgba(255, 255, 255, 0.58); font-size: 0.47rem; }
+
+.repair-status-grid { display: grid; grid-template-columns: repeat(4, 1fr); margin: 1rem 1.5rem 0; border-top: 1px solid var(--color-line); border-left: 1px solid var(--color-line); }
+.repair-status-grid > div { display: grid; gap: 0.25rem; padding: 0.7rem; border-right: 1px solid var(--color-line); border-bottom: 1px solid var(--color-line); }
+.repair-status-grid dt { color: var(--color-muted); font-size: 0.42rem; }
+.repair-status-grid dd { margin: 0; font-size: 0.5rem; font-weight: 800; }
+.text-confirmed, .text-successful, .text-synchronized, .text-completed { color: var(--color-success); }
+.text-pending { color: var(--color-warning); }
+.text-failed { color: var(--color-danger); }
+
+.audit-trail { margin: 1.3rem 1.5rem 0; }
+.audit-trail h3 { margin: 0.2rem 0 0; font-size: 1rem; font-weight: 500; letter-spacing: -0.04em; }
+.audit-trail ol { position: relative; display: grid; gap: 0.85rem; margin: 1rem 0 0; padding: 0; list-style: none; }
+.audit-trail ol::before { position: absolute; top: 0.4rem; bottom: 0.4rem; left: 0.26rem; width: 1px; background: var(--color-line); content: ''; }
+.audit-trail li { position: relative; display: grid; grid-template-columns: 0.55rem 1fr; gap: 0.7rem; }
+.audit-trail li > i { z-index: 1; width: 0.55rem; height: 0.55rem; margin-top: 0.15rem; border: 2px solid var(--repair-paper); border-radius: 50%; background: #aeb8b2; box-shadow: 0 0 0 1px var(--color-line); }
+.audit-trail li.audit-completed > i, .audit-trail li.audit-confirmed > i, .audit-trail li.audit-synchronized > i { background: var(--color-success); }
+.audit-trail li > div { display: grid; gap: 0.15rem; }
+.audit-trail strong { font-size: 0.54rem; }
+.audit-trail p { margin: 0; color: var(--color-muted); font-size: 0.46rem; line-height: 1.5; }
+.audit-trail time { color: rgba(81, 96, 89, 0.65); font-size: 0.42rem; }
+
+.completion-action { display: grid; align-items: center; grid-template-columns: 1fr auto; gap: 1rem; margin-top: 1.4rem; padding: 1.2rem 1.5rem; background: var(--color-brand-deep); color: white; }
+.completion-action > div { display: grid; gap: 0.25rem; }
+.completion-action > div > span { color: var(--color-accent); }
+.completion-action strong { font-size: 0.66rem; }
+.completion-action p { max-width: 26rem; margin: 0; color: rgba(255, 255, 255, 0.48); font-size: 0.45rem; line-height: 1.55; }
+.completion-action button { display: inline-flex; min-height: 2.8rem; align-items: center; gap: 1rem; padding-inline: 0.9rem; cursor: pointer; border: 0; border-radius: 0.65rem; background: var(--color-accent); color: var(--color-brand-deep); font: inherit; font-size: 0.52rem; font-weight: 800; }
+.completion-recorded { display: grid; align-items: center; grid-template-columns: 2rem 1fr; gap: 0.7rem; margin-top: 1.4rem; padding: 1.1rem 1.5rem; background: #dff3e7; }
+.completion-recorded > span { display: grid; width: 2rem; height: 2rem; place-items: center; border-radius: 50%; background: var(--color-success); color: white; font-size: 0.6rem; font-weight: 800; }
+.completion-recorded > div { display: grid; gap: 0.15rem; }
+.completion-recorded strong { color: var(--color-success); font-size: 0.58rem; }
+.completion-recorded p { margin: 0; color: var(--color-muted); font-size: 0.46rem; }
+
+.repairs-empty { display: grid; min-height: 20rem; place-content: center; justify-items: center; gap: 0.45rem; border: 1px dashed var(--color-line); border-radius: 1rem; color: var(--color-muted); text-align: center; }
+.repairs-empty > span { font-size: 2rem; }
+.repairs-empty strong { color: var(--color-ink); font-size: 0.78rem; }
+.repairs-empty p { margin: 0; font-size: 0.52rem; }
+.repairs-empty a { color: var(--color-brand); font-size: 0.54rem; font-weight: 800; }
+
+.completion-dialog { width: min(28rem, calc(100vw - 2rem)); padding: 0; border: 0; border-radius: 1.8rem 0.5rem 1.8rem 0.5rem; background: var(--repair-paper); color: var(--color-ink); box-shadow: 0 35px 90px rgba(5, 23, 18, 0.34); }
+.completion-dialog::backdrop { background: rgba(4, 19, 15, 0.64); backdrop-filter: blur(5px); }
+.completion-dialog form { padding: 1.6rem; }
+.dialog-check { display: grid; width: 3rem; height: 3rem; margin-bottom: 1.2rem; place-items: center; border-radius: 50%; background: var(--color-accent); color: var(--color-brand-deep); font-size: 0.85rem; font-weight: 800; }
+.completion-dialog form > span { color: var(--color-brand); font-size: 0.5rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; }
+.completion-dialog h2 { margin: 0.45rem 0 0.6rem; font-size: 1.85rem; font-weight: 500; letter-spacing: -0.06em; }
+.completion-dialog form > p { margin: 0; color: var(--color-muted); font-size: 0.56rem; line-height: 1.65; }
+.dialog-record { display: grid; gap: 0.18rem; margin: 1.2rem 0; padding: 0.9rem; border: 1px solid var(--color-line); border-radius: 0.75rem; }
+.dialog-record span { color: var(--color-brand); font-size: 0.46rem; font-weight: 800; }
+.dialog-record strong { font-size: 0.66rem; }
+.dialog-record small { color: var(--color-muted); font-size: 0.48rem; }
+.dialog-actions { display: grid; grid-template-columns: 0.7fr 1.3fr; gap: 0.55rem; }
+.dialog-actions button { min-height: 2.8rem; cursor: pointer; border: 1px solid var(--color-line); border-radius: 0.65rem; background: transparent; font: inherit; font-size: 0.54rem; font-weight: 800; }
+.dialog-actions button[type='submit'] { border-color: var(--color-brand-deep); background: var(--color-brand-deep); color: white; }
+
+.repairs-enter { animation: repairs-enter 760ms var(--ease-out) both; animation-delay: var(--enter-delay, 0ms); }
+@keyframes repairs-enter { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes rule-pulse { 0%, 100% { transform: scale(0.75); opacity: 0.55; } 50% { transform: scale(1.25); opacity: 1; } }
+@keyframes unrecorded-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(216, 154, 37, 0.3); } 50% { box-shadow: 0 0 0 6px rgba(216, 154, 37, 0); } }
+
+@media (max-width: 1180px) {
+    .repairs-workspace { grid-template-columns: 1fr; }
+    .repair-inspector { display: grid; grid-template-columns: 0.85fr 1.15fr; }
+    .inspector-grid, .inspector-heading, .completion-action, .completion-recorded { grid-column: 1 / -1; }
+    .repair-customer, .repair-service-card { align-self: start; }
+    .repair-status-grid { align-self: start; grid-template-columns: 1fr 1fr; }
+    .audit-trail { margin-bottom: 1.5rem; }
+}
+
+@media (max-width: 760px) {
+    .repairs-intro { grid-template-columns: 1fr; gap: 1.5rem; padding-top: 3rem; }
+    .repairs-intro h1 { font-size: clamp(3.9rem, 17vw, 5.7rem); }
+    .repair-summary { grid-template-columns: 1fr 1fr; }
+    .repair-summary article:nth-child(2) { border-right: 0; }
+    .repair-summary article:nth-child(-n+2) { border-bottom: 1px solid rgba(16, 32, 27, 0.09); }
+    .repair-filters { grid-template-columns: 1fr; }
+    .repair-filters > div { overflow-x: auto; }
+    .repair-ticket { grid-template-columns: 2rem minmax(9rem, 1fr) auto 0.8rem; }
+    .ticket-date { display: none; }
+    .repair-inspector { grid-template-columns: 1fr; }
+    .inspector-grid, .inspector-heading, .completion-action, .completion-recorded { grid-column: auto; }
+    .repair-status-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 480px) {
+    .repairs-intro h1 { font-size: 3.65rem; }
+    .intro-rule { grid-template-columns: 2rem 1fr; }
+    .repair-summary { grid-template-columns: 1fr; }
+    .repair-summary article { min-height: 4.8rem; border-right: 0; border-bottom: 1px solid rgba(16, 32, 27, 0.09); }
+    .repair-summary article:last-child { border-bottom: 0; }
+    .repair-ticket { grid-template-columns: 1.8rem minmax(8rem, 1fr) 0.8rem; gap: 0.55rem; }
+    .ticket-status { grid-column: 2; justify-self: start; min-height: 1.55rem; }
+    .repair-ticket > svg { grid-column: 3; grid-row: 1 / 3; }
+    .inspector-heading { align-items: center; }
+    .completion-stamp { width: 4.8rem; height: 4.8rem; }
+    .repair-status-grid { grid-template-columns: 1fr; }
+    .completion-action { grid-template-columns: 1fr; }
+    .completion-action button { justify-content: space-between; }
+    .dialog-actions { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .repairs-enter { opacity: 1; transform: none; animation: none; }
+    .intro-rule i::after, .unrecorded-mark i { animation: none; }
+}

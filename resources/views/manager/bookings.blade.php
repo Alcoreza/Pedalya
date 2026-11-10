@@ -10,7 +10,7 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=manrope:400,500,600,700,800" rel="stylesheet" />
 
-        @vite(['resources/css/app.css', 'resources/css/pages/manager-bookings.css', 'resources/js/app.js', 'resources/js/pages/manager-bookings.js'])
+        @vite(['resources/css/app.css', 'resources/css/pages/manager-bookings.css', 'resources/js/app.js', 'resources/js/pages/manager-workspace.js', 'resources/js/pages/manager-bookings.js'])
     </head>
     <body class="manager-dashboard-page manager-bookings-page">
         <a class="manager-skip-link" href="#bookings-content">Skip to bookings</a>
@@ -54,11 +54,11 @@
                         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7v5l3 2"></path></svg>
                         <span>Schedule</span>
                     </a>
-                    <a href="#">
+                    <a href="{{ route('manager.repairs.index') }}">
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 6.5 3-3 3 3-3 3M4 20l7.5-7.5M6.5 4.5l13 13M4 7l3-3"></path></svg>
                         <span>Repairs</span>
                     </a>
-                    <a href="#">
+                    <a href="{{ route('manager.activity.index') }}">
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 3.5 7.5v9L12 21l8.5-4.5v-9L12 3Z"></path><path d="M12 8v5M12 16.5v.1"></path></svg>
                         <span>Activity</span>
                     </a>
