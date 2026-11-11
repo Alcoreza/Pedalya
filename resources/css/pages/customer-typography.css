@@ -1,0 +1,73 @@
+/* Shared customer typography: clear hierarchy without overly heavy text. */
+.customer-booking-page h1,
+.customer-booking-page h2,
+.customer-booking-page h3,
+.customer-booking-page .preview-pill,
+.customer-booking-page .detail-back-link,
+.customer-booking-page .booking-steps,
+.customer-booking-page .section-kicker,
+.customer-booking-page .service-card-top,
+.customer-booking-page .booking-next,
+.customer-booking-page .detail-reference,
+.customer-booking-page .detail-current-status span,
+.customer-booking-page .detail-card-heading span,
+.customer-booking-page .detail-summary-card dt,
+.customer-booking-page .detail-summary-card dd,
+.customer-booking-page .detail-payment-note a,
+.customer-booking-page .map-label,
+.customer-booking-page .location-details a,
+.customer-booking-page .booking-filter,
+.customer-booking-page .booking-reference,
+.customer-booking-page .record-status,
+.customer-booking-page .record-view-link,
+.customer-booking-page .dashboard-user,
+.customer-booking-page .dashboard-card-top > span:first-child,
+.customer-booking-page .dashboard-panel-heading > span,
+.customer-booking-page .dashboard-date small,
+.customer-booking-page .dashboard-date span,
+.customer-booking-page .dashboard-reference,
+.customer-booking-page .dashboard-card-footer a,
+.customer-booking-page .dashboard-panel-heading a,
+.customer-booking-page .dashboard-location-panel > a,
+.customer-booking-page .dashboard-mini-map span,
+.customer-booking-page .payment-status-card span,
+.customer-booking-page .payment-provider-points span,
+.customer-booking-page .payment-summary-card dd,
+.customer-booking-page .payment-back-link,
+.customer-booking-page .payment-preview-links a,
+.customer-booking-page .repair-current-status > span,
+.customer-booking-page .repair-choice-top,
+.customer-booking-page .repair-choice-status,
+.customer-booking-page .repair-choice-card a,
+.customer-booking-page .timeline-copy strong,
+.customer-booking-page .repair-visit-card dd,
+.customer-booking-page .confirmation-mark,
+.customer-booking-page .confirmation-card-head span,
+.customer-booking-page .confirmation-secondary,
+.customer-booking-page .result-mark,
+.customer-booking-page .result-actions .confirmation-secondary,
+.customer-booking-page .panel-heading > span,
+.customer-booking-page .review-field > span,
+.customer-booking-page .review-form-message,
+.customer-booking-page .summary-payment span,
+.customer-booking-page .summary-back-link,
+.customer-booking-page .selected-service-summary,
+.customer-booking-page .schedule-panel-heading > div:first-child > span,
+.customer-booking-page .date-card small,
+.customer-booking-page .time-slot {
+    font-weight: 700 !important;
+}
+
+.customer-booking-page p,
+.customer-booking-page .booking-preview-note p,
+.customer-booking-page .selection-message,
+.customer-booking-page .location-preview-note,
+.customer-booking-page .payment-placeholder-message {
+    font-weight: 400;
+}
+
+/* Keep the shared customer navigation aligned with the landing navbar. */
+.customer-booking-page .customer-nav a,
+.customer-booking-page .header-link {
+    font-weight: 600 !important;
+}

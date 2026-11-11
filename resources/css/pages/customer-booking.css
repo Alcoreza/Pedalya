@@ -1,0 +1,426 @@
+.customer-booking-page {
+    min-height: 100vh;
+    color: var(--color-ink);
+    background: var(--color-canvas);
+    background-image: radial-gradient(circle at 86% 8%, rgba(201, 240, 108, 0.28), transparent 27rem), linear-gradient(135deg, rgba(255, 255, 255, 0.7), transparent 52%);
+}
+
+/* Customer typography contract: headings lead, labels guide, body copy stays calm. */
+.customer-booking-page h1,
+.customer-booking-page h2,
+.customer-booking-page h3 { font-weight: 800; }
+.customer-booking-page p { font-weight: 400; }
+.customer-booking-page strong { font-weight: 700; }
+.customer-booking-page .section-kicker,
+.customer-booking-page .booking-next,
+.customer-booking-page .record-status { font-weight: 800; }
+.customer-booking-page .booking-preview-note p,
+.customer-booking-page .selection-message,
+.customer-booking-page .location-preview-note,
+.customer-booking-page .payment-placeholder-message { font-weight: 400; }
+
+.customer-header {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 90rem;
+    margin: 0 auto;
+    padding: 1.6rem 4vw;
+}
+
+.customer-header-actions { display: flex; align-items: center; gap: 1.5rem; }
+.preview-pill { display: inline-flex; align-items: center; gap: .45rem; color: var(--color-muted); font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.preview-pill i { width: .45rem; height: .45rem; border-radius: 50%; background: var(--color-pending); box-shadow: 0 0 0 .25rem var(--color-pending-soft); }
+.header-link { color: var(--color-brand-dark); font-size: .86rem; font-weight: 600; text-decoration: none; }
+.header-link span { margin-left: .3rem; color: var(--color-brand); }
+
+.customer-booking-shell { max-width: 90rem; margin: 0 auto; padding: 3.5rem 4vw 4rem; }
+.detail-back-link { display: inline-block; margin-bottom: 2.3rem; color: var(--color-muted); font-size: .75rem; font-weight: 800; text-decoration: none; transition: color 180ms ease, transform 180ms ease; }
+.detail-back-link:hover { color: var(--color-brand); transform: translateX(-.15rem); }
+.detail-back-link + .detail-back-link { margin-left: 1rem; }
+.booking-steps { display: flex; align-items: center; gap: 1.5rem; margin-bottom: 4rem; color: var(--color-muted); font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.booking-step { display: inline-flex; align-items: center; gap: .6rem; }
+.booking-step b { display: grid; width: 2rem; height: 2rem; place-items: center; border: 1px solid var(--color-line); border-radius: 50%; font-size: .65rem; }
+.booking-step.is-active { color: var(--color-brand-dark); }
+.booking-step.is-active b { border-color: var(--color-brand); color: white; background: var(--color-brand); }
+.booking-step b { overflow: hidden; transition: transform 220ms var(--ease-out), background-color 220ms ease, border-color 220ms ease; }
+.booking-steps.is-advancing .booking-step.is-active b { animation: booking-step-number 280ms var(--ease-out) both; }
+.booking-steps.is-advancing .booking-step.is-active { color: var(--color-brand); }
+.booking-steps.is-advancing .booking-step.is-active + .booking-step { color: var(--color-brand-dark); }
+.booking-steps.is-advancing .booking-step.is-active + .booking-step b { border-color: var(--color-brand); box-shadow: 0 0 0 .2rem var(--color-accent-soft); transform: scale(1.08); }
+
+@keyframes booking-step-number {
+    0% { transform: translateY(0) scale(1); }
+    45% { transform: translateY(-.35rem) scale(1.08); }
+    100% { transform: translateY(0) scale(1); }
+}
+
+.booking-intro { display: flex; align-items: end; justify-content: space-between; gap: 2rem; margin-bottom: 2.75rem; }
+.section-kicker { color: var(--color-brand); font-size: .72rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+.booking-intro h1 { margin: .7rem 0 0; color: var(--color-brand-deep); font-size: clamp(2.8rem, 6vw, 5.4rem); line-height: .95; letter-spacing: -.075em; }
+.booking-intro h1 em { color: var(--color-brand); font-style: normal; }
+.booking-intro > p { max-width: 21rem; margin: 0 0 .35rem; color: var(--color-muted); font-size: .95rem; line-height: 1.7; }
+
+.service-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
+.service-card { position: relative; display: flex; min-height: 20rem; flex-direction: column; padding: 1.35rem; overflow: hidden; cursor: pointer; border: 1px solid transparent; border-radius: var(--radius-medium); background: var(--color-surface); box-shadow: var(--shadow-card); transition: transform 280ms var(--ease-out), border-color 280ms ease, box-shadow 280ms ease; }
+.service-card:hover { transform: translateY(-.35rem); box-shadow: var(--shadow-soft); }
+.service-card:has(input:checked) { border-color: var(--color-brand); box-shadow: 0 0 0 .2rem rgba(31, 100, 84, .12), var(--shadow-card); transform: translateY(-.35rem); }
+.service-card input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.service-card-top { display: flex; align-items: center; justify-content: space-between; color: var(--color-muted); font-size: .7rem; font-weight: 800; }
+.service-card-top i { color: var(--color-brand); font-size: 1.1rem; font-style: normal; }
+.service-card-icon { display: grid; width: 4.2rem; height: 4.2rem; margin: 2rem 0 1.5rem; place-items: center; border-radius: 1.2rem; background: var(--color-surface-soft); color: var(--color-brand); }
+.service-card-lime .service-card-icon { background: var(--color-accent-soft); color: var(--color-brand-dark); }
+.service-card-blue .service-card-icon { background: #e7f0f7; color: #316477; }
+.service-card-peach .service-card-icon { background: #fff0e5; color: #b5663d; }
+.service-card-icon svg { width: 2.2rem; fill: none; stroke: currentColor; stroke-linecap: round; stroke-width: 1.6; transform-origin: center; }
+.service-card-icon { transition: transform 280ms var(--ease-out), background-color 280ms ease, box-shadow 280ms ease; }
+.service-card:hover .service-card-icon { transform: translateY(-.2rem) scale(1.08); box-shadow: 0 .55rem 1rem rgba(31, 100, 84, .14); }
+.service-card:hover .service-card-icon svg { animation-duration: 680ms; animation-timing-function: var(--ease-out); animation-fill-mode: both; }
+.service-card-mint:hover .service-card-icon svg { animation-name: brake-icon-hover; }
+.service-card-lime:hover .service-card-icon svg { animation-name: alignment-icon-hover; }
+.service-card-blue:hover .service-card-icon svg { animation-name: tune-up-icon-hover; }
+.service-card-peach:hover .service-card-icon svg { animation-name: tire-icon-hover; }
+
+@keyframes brake-icon-hover {
+    0%, 100% { transform: rotate(0) scale(1); }
+    35% { transform: rotate(-14deg) scale(1.18); }
+    70% { transform: rotate(8deg) scale(1.08); }
+}
+
+@keyframes alignment-icon-hover {
+    0% { transform: rotate(0) scale(1); }
+    45% { transform: rotate(110deg) scale(1.14); }
+    75% { transform: rotate(90deg) scale(1.06); }
+    100% { transform: rotate(90deg) scale(1); }
+}
+
+@keyframes tune-up-icon-hover {
+    0%, 100% { transform: rotate(0) translate(0); }
+    30% { transform: rotate(-18deg) translate(-.16rem, .08rem) scale(1.12); }
+    65% { transform: rotate(12deg) translate(.14rem, -.05rem) scale(1.04); }
+}
+
+@keyframes tire-icon-hover {
+    0%, 100% { transform: scale(1); }
+    35% { transform: scale(1.2); }
+    65% { transform: scale(.92); }
+}
+.service-card strong { color: var(--color-brand-deep); font-size: 1.15rem; letter-spacing: -.04em; }
+.service-card-description { min-height: 3rem; margin-top: .55rem; color: var(--color-muted); font-size: .8rem; line-height: 1.55; }
+.service-card-meta { display: flex; align-items: end; justify-content: space-between; margin-top: auto; padding-top: 1.4rem; border-top: 1px solid var(--color-line); }
+.service-card-meta small { color: var(--color-muted); font-size: .73rem; font-weight: 700; }
+.service-card-meta b { color: var(--color-brand-dark); font-size: 1.15rem; }
+.service-card-check { position: absolute; top: 1.2rem; right: 1.2rem; display: grid; width: 1.5rem; height: 1.5rem; place-items: center; border-radius: 50%; color: white; background: var(--color-brand); font-size: .75rem; opacity: 0; transform: scale(.5); transition: opacity 200ms ease, transform 200ms ease; }
+.service-card:has(input:checked) .service-card-check { opacity: 1; transform: scale(1); }
+
+.booking-action-bar { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; margin-top: 1.4rem; }
+.selection-message { margin: 0; color: var(--color-muted); font-size: .82rem; }
+.booking-next { display: inline-flex; align-items: center; gap: 1rem; padding: .95rem 1.3rem; border: 0; border-radius: .8rem; color: var(--color-brand-deep); background: var(--color-accent); font: inherit; font-size: .82rem; font-weight: 800; cursor: pointer; transition: transform 200ms ease, opacity 200ms ease; }
+.booking-next:not(:disabled):hover { transform: translateY(-.15rem); }
+.booking-next:disabled { cursor: not-allowed; opacity: .45; }
+.booking-preview-note { display: flex; align-items: start; gap: .75rem; max-width: 38rem; margin-top: 3rem; padding: 1rem 1.1rem; border: 1px solid var(--color-line); border-radius: .9rem; color: var(--color-muted); background: rgba(255, 255, 255, .5); }
+.booking-preview-note span { color: var(--color-brand); }
+.booking-preview-note p { margin: 0; font-size: .75rem; line-height: 1.6; }
+
+@media (max-width: 900px) {
+    .service-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 620px) {
+    .customer-header { padding: 1.2rem 1.25rem; }
+    .customer-header-actions { gap: .7rem; }
+    .preview-pill { display: none; }
+    .customer-booking-shell { padding: 2.5rem 1.25rem 3rem; }
+    .booking-steps { gap: .6rem; margin-bottom: 3rem; overflow-x: auto; }
+    .booking-step span { display: none; }
+    .booking-intro { display: block; }
+    .booking-intro > p { margin-top: 1.2rem; }
+    .service-grid { grid-template-columns: 1fr; }
+    .service-card { min-height: 17rem; }
+    .booking-action-bar { align-items: stretch; flex-direction: column; }
+    .booking-next { justify-content: center; }
+    .customer-nav { gap: 1.25rem; max-width: 100%; margin: 0; padding: 0 1.25rem 1.1rem; overflow-x: auto; }
+    .customer-nav a { flex: 0 0 auto; padding: .5rem 0; font-size: .72rem; }
+}
+
+/* Shared customer navigation mirrors the landing page navbar. */
+.customer-nav {
+    position: absolute;
+    top: 1.6rem;
+    left: 50%;
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    margin: 0;
+    padding: 0;
+    transform: translateX(-50%);
+}
+
+.customer-nav a {
+    position: relative;
+    padding: 0;
+    color: var(--color-ink-soft);
+    font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+    font-size: .86rem;
+    font-weight: 600;
+    line-height: 1.2;
+    text-decoration: none;
+    transition: color 200ms ease;
+}
+
+.customer-nav a::after {
+    position: absolute;
+    right: 0;
+    bottom: -.45rem;
+    left: 0;
+    height: 1px;
+    background: var(--color-brand);
+    content: '';
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform 300ms var(--ease-out);
+}
+
+.customer-nav a:hover,
+.customer-nav a.is-active { color: var(--color-brand); }
+
+.customer-nav a:hover::after,
+.customer-nav a.is-active::after {
+    transform: scaleX(1);
+    transform-origin: left;
+}
+
+@media (max-width: 620px) {
+    .customer-nav {
+        position: static;
+        gap: 1.25rem;
+        max-width: 100%;
+        padding: 0 1.25rem 1.1rem;
+        overflow-x: auto;
+        transform: none;
+    }
+    .customer-nav a { font-size: .72rem; }
+}
+
+/* One customer shell for every page, using the landing navbar structure. */
+.customer-header { display: none; }
+.customer-site-header { position: relative; z-index: 10; }
+.customer-nav-shell {
+    position: relative;
+    display: flex;
+    width: min(100% - 2rem, 1180px);
+    min-height: 5.25rem;
+    align-items: center;
+    gap: 2rem;
+    margin-inline: auto;
+}
+.customer-nav-shell .brand {
+    font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+    font-weight: 800;
+}
+.customer-nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    margin-left: auto;
+}
+.customer-preview-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    color: var(--color-muted);
+    font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+    font-size: .72rem;
+    font-weight: 600;
+    letter-spacing: .02em;
+}
+.customer-preview-pill i {
+    width: .45rem;
+    height: .45rem;
+    border-radius: 50%;
+    background: var(--color-pending);
+}
+.customer-nav-login {
+    position: relative;
+    color: var(--color-ink-soft);
+    font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+    font-size: .86rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 200ms ease;
+}
+.customer-nav-login::after {
+    position: absolute;
+    right: 0;
+    bottom: -.45rem;
+    left: 0;
+    height: 1px;
+    background: var(--color-brand);
+    content: '';
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform 300ms var(--ease-out);
+}
+.customer-nav-login:hover { color: var(--color-brand); }
+.customer-nav-login:hover::after { transform: scaleX(1); transform-origin: left; }
+.customer-nav-login span { margin-left: .25rem; transition: transform 300ms var(--ease-out); }
+.customer-nav-login:hover span { display: inline-block; transform: translateX(.2rem); }
+
+@media (max-width: 620px) {
+    .customer-nav-shell { width: min(100% - 1.25rem, 1180px); min-height: 4.6rem; flex-wrap: wrap; gap: 0; }
+    .customer-nav-shell .brand { margin-right: auto; }
+    .customer-nav-actions { gap: .7rem; }
+    .customer-preview-pill { display: none; }
+    .customer-nav { order: 3; flex-basis: 100%; }
+}
+
+/* Shared customer motion: subtle entrance, feedback, and hover depth. */
+.customer-motion-ready .customer-site-header {
+    animation: customer-header-in 650ms var(--ease-out) both;
+}
+
+.customer-motion-ready .customer-booking-shell {
+    animation: customer-page-in 560ms var(--ease-out) both;
+}
+
+.customer-motion-ready.customer-page-leaving {
+    pointer-events: none;
+    animation: customer-page-out 220ms ease both;
+}
+
+.customer-motion-ready .customer-reveal {
+    opacity: 0;
+    transform: translateY(1rem);
+    transition: opacity 650ms var(--ease-out) var(--reveal-delay), transform 650ms var(--ease-out) var(--reveal-delay);
+}
+
+.customer-motion-ready .customer-reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.customer-booking-page button,
+.customer-booking-page a {
+    -webkit-tap-highlight-color: transparent;
+}
+
+.customer-booking-page button:active,
+.customer-booking-page a.booking-next:active,
+.customer-booking-page a.record-view-link:active {
+    transform: translateY(1px) scale(.985);
+}
+
+.customer-booking-page .service-card:focus-within,
+.customer-booking-page .booking-record:focus-within,
+.customer-booking-page .repair-choice-card:focus-within,
+.customer-booking-page .payment-card:focus-within,
+.customer-booking-page .detail-card:focus-within,
+.customer-booking-page .dashboard-panel:focus-within {
+    border-color: var(--color-brand);
+    box-shadow: 0 0 0 .18rem rgba(31, 100, 84, .1), var(--shadow-soft);
+}
+
+.customer-booking-page :where(a, button, input, textarea, select):focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 3px;
+}
+
+.customer-booking-page .customer-interactive {
+    transition: transform 220ms var(--ease-out), box-shadow 220ms ease, border-color 220ms ease, background-color 220ms ease;
+}
+
+.customer-booking-page .customer-interactive:hover {
+    transform: translateY(-.3rem);
+    box-shadow: var(--shadow-soft);
+}
+
+.customer-booking-page .customer-interactive:active {
+    transform: translateY(0) scale(.99);
+}
+
+.customer-booking-page .service-card:hover,
+.customer-booking-page .date-card:hover:not(:disabled),
+.customer-booking-page .time-slot:hover,
+.customer-booking-page .time-slot.is-selected {
+    border-color: var(--color-brand);
+}
+
+.customer-booking-page .status-overview > div:hover .status-icon {
+    animation: status-icon-hover 520ms var(--ease-out) both;
+}
+
+@keyframes status-icon-hover {
+    0%, 100% { transform: translateY(0) rotate(0) scale(1); }
+    40% { transform: translateY(-.25rem) rotate(-10deg) scale(1.22); }
+    72% { transform: translateY(0) rotate(5deg) scale(1.08); }
+}
+
+.customer-booking-page .customer-interactive:has(input:checked) {
+    transform: translateY(-.2rem);
+}
+
+.customer-motion-ready .repair-timeline-item,
+.customer-motion-ready .status-overview > div,
+.customer-motion-ready .booking-status-item {
+    animation: customer-content-in 500ms var(--ease-out) both;
+    animation-delay: calc(var(--reveal-delay, 0ms) + 140ms);
+}
+
+.customer-motion-ready .repair-timeline-item:nth-child(2),
+.customer-motion-ready .status-overview > div:nth-child(2),
+.customer-motion-ready .booking-status-item:nth-child(2) { --reveal-delay: 70ms; }
+.customer-motion-ready .repair-timeline-item:nth-child(3),
+.customer-motion-ready .status-overview > div:nth-child(3),
+.customer-motion-ready .booking-status-item:nth-child(3) { --reveal-delay: 140ms; }
+.customer-motion-ready .repair-timeline-item:nth-child(4),
+.customer-motion-ready .status-overview > div:nth-child(4),
+.customer-motion-ready .booking-status-item:nth-child(4) { --reveal-delay: 210ms; }
+
+@keyframes customer-content-in {
+    from { opacity: 0; transform: translateY(.45rem); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes customer-header-in {
+    from { opacity: 0; transform: translateY(-.6rem); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes customer-page-in {
+    from { opacity: 0; transform: translateY(.8rem); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes customer-page-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .customer-motion-ready .customer-site-header,
+    .customer-motion-ready .customer-reveal,
+    .customer-motion-ready .customer-booking-shell,
+    .customer-motion-ready.customer-page-leaving,
+    .customer-motion-ready .repair-timeline-item,
+    .customer-motion-ready .status-overview > div,
+    .customer-motion-ready .booking-status-item {
+        animation: none;
+        opacity: 1;
+        transform: none;
+        transition: none;
+    }
+
+    .customer-booking-page .customer-interactive:hover,
+    .customer-booking-page .customer-interactive:active {
+        transform: none;
+    }
+
+    .service-card:hover .service-card-icon,
+    .service-card:hover .service-card-icon svg,
+    .customer-booking-page .status-overview > div:hover .status-icon {
+        animation: none;
+        transform: none;
+        box-shadow: none;
+    }
+}
