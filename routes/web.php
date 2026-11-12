@@ -20,6 +20,9 @@ Route::prefix('manager')->name('manager.')->group(function () {
     Route::get('/schedule', [ScheduleController::class, 'index'])->name('schedule.index');
     Route::post('/schedule/{booking}/calendar-sync', [ScheduleController::class, 'retryCalendarSync'])->name('schedule.calendar-sync.retry');
     Route::get('/repairs', [RepairsController::class, 'index'])->name('repairs.index');
+    Route::post('/repairs/{booking}/arrive', [RepairsController::class, 'markArrived'])->name('repairs.arrive');
+    Route::post('/repairs/{booking}/start', [RepairsController::class, 'start'])->name('repairs.start');
     Route::post('/repairs/{booking}/complete', [RepairsController::class, 'markCompleted'])->name('repairs.complete');
+    Route::post('/repairs/{booking}/claim', [RepairsController::class, 'markClaimed'])->name('repairs.claim');
     Route::get('/activity', [ActivityController::class, 'index'])->name('activity.index');
 });

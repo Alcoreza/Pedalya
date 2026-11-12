@@ -125,20 +125,27 @@
 .day-column > header span { color: var(--color-muted); font-size: 0.45rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
 .day-column > header strong { font-size: 1.35rem; font-weight: 500; letter-spacing: -0.05em; }
 .day-column > header small { position: absolute; bottom: 0.35rem; color: var(--color-brand); font-size: 0.4rem; font-weight: 800; text-transform: uppercase; }
+.day-count { position: absolute; top: 0.45rem; right: 0.45rem; display: grid; min-width: 1.25rem; height: 1.25rem; place-items: center; border-radius: 50%; background: rgba(16, 32, 27, 0.08); color: var(--color-brand); font-size: 0.43rem; }
 .day-column.is-today { background: rgba(201, 240, 108, 0.055); }
 .day-column.is-today > header { background: var(--color-brand-deep); color: white; }
 .day-column.is-today > header span { color: rgba(255, 255, 255, 0.52); }
 .day-column.is-today > header small { color: var(--color-accent); }
+.day-column.is-today .day-count { background: var(--color-accent); color: var(--color-brand-deep); }
 
-.day-appointments { display: grid; align-content: start; gap: 0.5rem; padding: 0.55rem; }
-.appointment-card { position: relative; display: grid; min-height: 8.4rem; align-content: start; gap: 0.28rem; padding: 0.7rem; overflow: hidden; border: 1px solid rgba(16, 32, 27, 0.09); border-radius: 0.4rem 0.9rem 0.4rem 0.9rem; background: var(--schedule-paper); color: var(--color-ink); text-decoration: none; transition: transform 220ms var(--ease-out), box-shadow 220ms ease, border-color 180ms ease; }
+.day-appointments { display: grid; align-content: start; gap: 0.75rem; padding: 0.55rem; }
+.appointment-slot { display: grid; gap: 0.35rem; min-width: 0; }
+.slot-heading { display: flex; min-height: 1.25rem; align-items: center; justify-content: space-between; gap: 0.3rem; padding: 0 0.15rem; }
+.slot-heading time { color: var(--color-brand); font-size: 0.46rem; font-weight: 800; }
+.slot-heading span { padding: 0.2rem 0.35rem; border-radius: 999px; background: #fff1cf; color: #936014; font-size: 0.36rem; font-weight: 800; white-space: nowrap; }
+.appointment-slot.is-shared { padding: 0.35rem; border: 1px solid rgba(216, 154, 37, 0.28); border-radius: 0.75rem; background: rgba(255, 246, 223, 0.52); }
+.slot-bookings { display: grid; gap: 0.35rem; }
+.appointment-card { position: relative; display: grid; min-height: 5.7rem; align-content: start; gap: 0.25rem; padding: 0.65rem; overflow: hidden; border: 1px solid rgba(16, 32, 27, 0.09); border-radius: 0.4rem 0.9rem 0.4rem 0.9rem; background: var(--schedule-paper); color: var(--color-ink); text-decoration: none; transition: transform 220ms var(--ease-out), box-shadow 220ms ease, border-color 180ms ease; }
 .appointment-card::before { position: absolute; inset: 0 auto 0 0; width: 0.18rem; background: var(--color-brand); content: ''; }
 .appointment-card:hover { transform: translateY(-2px); border-color: rgba(31, 100, 84, 0.3); box-shadow: 0 12px 22px rgba(12, 40, 34, 0.08); }
 .appointment-card.is-selected { border-color: var(--color-brand); box-shadow: inset 0 0 0 1px var(--color-brand); }
-.appointment-time { color: var(--color-brand); font-size: 0.48rem; font-weight: 800; }
-.appointment-card strong { margin-top: 0.15rem; font-size: 0.6rem; line-height: 1.3; }
+.appointment-card strong { margin-top: 0.1rem; padding-right: 0.6rem; font-size: 0.58rem; line-height: 1.3; }
 .appointment-card small { color: var(--color-muted); font-size: 0.45rem; line-height: 1.45; }
-.appointment-reference { margin-top: auto; color: var(--color-muted); font-size: 0.42rem; }
+.appointment-reference { color: var(--color-brand); font-size: 0.39rem; font-weight: 800; }
 .appointment-card > i { position: absolute; top: 0.65rem; right: 0.65rem; }
 .sync-card-pending::before { background: var(--color-warning); }
 .sync-card-failed::before { background: var(--color-danger); }
@@ -178,13 +185,16 @@
 .calendar-contract { display: grid; gap: 0.25rem; margin: 1rem 1.25rem 0; padding: 0.9rem; border-radius: 0.75rem; background: #eef2eb; }
 .calendar-contract strong { font-size: 0.58rem; }
 .calendar-contract small { overflow-wrap: anywhere; color: var(--color-muted); font-size: 0.45rem; line-height: 1.5; }
+.calendar-contract:last-child { margin-bottom: 1.25rem; }
 
 .sync-action { margin-top: 1rem; padding: 1rem 1.25rem 1.25rem; background: var(--color-brand-deep); }
 .sync-action button { display: flex; width: 100%; min-height: 2.8rem; align-items: center; justify-content: space-between; padding-inline: 0.9rem; cursor: pointer; border: 0; border-radius: 0.65rem; background: var(--color-accent); color: var(--color-brand-deep); font: inherit; font-size: 0.54rem; font-weight: 800; }
 .sync-action p { margin: 0.6rem 0 0; color: rgba(255, 255, 255, 0.48); font-size: 0.43rem; line-height: 1.55; }
+.sync-action:last-child { margin-bottom: 1.25rem; border-radius: 0 0 1.2rem 0.3rem; }
 .sync-exhausted { display: grid; gap: 0.2rem; margin-top: 1rem; padding: 1rem 1.25rem; background: #fff0ed; }
 .sync-exhausted strong { color: var(--color-danger); font-size: 0.56rem; }
 .sync-exhausted span { color: var(--color-muted); font-size: 0.45rem; }
+.sync-exhausted:last-child { margin-bottom: 1.25rem; border-radius: 0 0 1.2rem 0.3rem; }
 
 .schedule-enter { animation: schedule-enter 750ms var(--ease-out) both; animation-delay: var(--enter-delay, 0ms); }
 @keyframes schedule-enter { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
@@ -218,7 +228,7 @@
     .week-grid { grid-template-columns: 1fr 1fr; }
     .day-column, .day-column:nth-child(4n) { min-height: 14rem; border-right: 1px solid rgba(16, 32, 27, 0.09); }
     .day-column:nth-child(2n) { border-right: 0; }
-    .appointment-card { min-height: 7.6rem; }
+    .appointment-card { min-height: 5.5rem; }
     .schedule-detail { grid-template-columns: 1fr; }
     .detail-topline, .detail-title, .sync-action, .sync-exhausted { grid-column: auto; }
 }

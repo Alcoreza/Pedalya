@@ -50,7 +50,9 @@
 .intro-kicker,
 .queue-heading span,
 .detail-heading > div > span,
-.decision-panel > span {
+.decision-panel > span,
+.capacity-review header span,
+.overlap-list > span {
     color: var(--color-brand);
     font-size: 0.52rem;
     font-weight: 800;
@@ -122,7 +124,7 @@
 .booking-filters {
     display: grid;
     align-items: end;
-    grid-template-columns: minmax(14rem, 1fr) repeat(3, minmax(7.5rem, 0.42fr)) auto auto;
+    grid-template-columns: minmax(13rem, 1fr) repeat(4, minmax(6.7rem, 0.38fr)) auto auto;
     gap: 0.55rem;
     margin: 1rem 0 2.2rem;
     padding: 0.75rem;
@@ -274,6 +276,9 @@
 .state-pending { background: #fff1cf; color: #9a6415; }
 .state-confirmed, .state-successful, .state-synchronized, .state-completed { background: #dff3e7; color: #17684e; }
 .state-rejected, .state-failed { background: #ffe4e4; color: #b54141; }
+.state-review_required, .process-review_required { background: var(--color-pending-soft); color: #8b5b12; }
+.process-automatic { background: #dff3e7; color: var(--color-success); }
+.process-manual { background: #e5eeeb; color: var(--color-brand); }
 
 .booking-detail {
     position: sticky;
@@ -315,11 +320,47 @@
 .status-matrix > div { display: grid; min-height: 4.2rem; align-content: center; gap: 0.3rem; padding: 0.7rem; border-right: 1px solid var(--color-line); border-bottom: 1px solid var(--color-line); }
 .status-matrix span { color: var(--color-muted); font-size: 0.44rem; }
 .status-matrix strong { font-size: 0.54rem; }
+.status-matrix:last-child { margin-bottom: 1.35rem; }
 
 .text-pending { color: #9a6415; }
 .text-confirmed, .text-successful, .text-synchronized, .text-completed { color: var(--color-success); }
 .text-rejected, .text-failed { color: var(--color-danger); }
+.text-review_required, .process-text-review_required { color: #9a6415; }
+.process-text-automatic { color: var(--color-success); }
+.process-text-manual { color: var(--color-brand); }
 .text-not_applicable { color: var(--color-muted); }
+
+.capacity-review {
+    position: relative;
+    margin: 1rem 1.35rem 0;
+    overflow: hidden;
+    border-radius: 1rem;
+    background: #fffaf0;
+}
+
+.capacity-review header { display: flex; align-items: start; justify-content: space-between; gap: 1rem; padding: 1rem; border-bottom: 1px solid rgba(210, 138, 22, 0.18); }
+.capacity-review header span { color: #936117; }
+.capacity-review h3 { margin: 0.32rem 0 0; font-size: 0.82rem; font-weight: 600; letter-spacing: -0.035em; }
+.capacity-review header > time { padding: 0.45rem 0.6rem; border-radius: 999px; background: rgba(210, 138, 22, 0.1); color: #81530f; font-size: 0.45rem; font-weight: 800; white-space: nowrap; }
+.overlap-list { padding: 0.9rem 1rem 1rem; }
+.overlap-list > span { display: block; margin-bottom: 0.55rem; color: #936117; }
+.overlap-list a { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.65rem 0; border-top: 1px solid rgba(16, 32, 27, 0.08); color: var(--color-ink); text-decoration: none; }
+.overlap-list a:first-of-type { border-top: 0; }
+.overlap-list a:hover strong { color: var(--color-brand); }
+.overlap-list a div { display: grid; gap: 0.15rem; }
+.overlap-list strong { font-size: 0.52rem; transition: color 180ms ease; }
+.overlap-list small, .overlap-list time { color: var(--color-muted); font-size: 0.43rem; }
+.overlap-list time { white-space: nowrap; }
+
+.processing-note { display: grid; align-items: center; grid-template-columns: 2rem 1fr; gap: 0.7rem; margin: 1rem 1.35rem 0; padding: 0.85rem; border-radius: 0.75rem; background: #e8f3ed; }
+.processing-note > span { display: grid; width: 2rem; height: 2rem; place-items: center; border-radius: 50%; background: var(--color-success); color: white; font-size: 0.62rem; font-weight: 800; }
+.processing-note p { display: grid; gap: 0.18rem; margin: 0; }
+.processing-note strong { color: var(--color-success); font-size: 0.54rem; }
+.processing-note small { color: var(--color-muted); font-size: 0.46rem; line-height: 1.5; }
+.processing-manual { background: #e8efec; }
+.processing-manual > span { background: var(--color-brand); }
+.processing-manual strong { color: var(--color-brand); }
+.processing-note:last-child { margin-bottom: 1.35rem; }
 
 .integration-note {
     display: grid;
@@ -336,6 +377,7 @@
 .integration-note strong { font-size: 0.54rem; }
 .integration-note span { color: var(--color-muted); font-size: 0.48rem; line-height: 1.55; }
 .integration-failed { background: #fff0ed; }
+.integration-note:last-child { margin-bottom: 1.35rem; }
 .sync-loader { width: 1.2rem; height: 1.2rem; border: 2px solid rgba(31, 100, 84, 0.18); border-top-color: var(--color-brand); border-radius: 50%; animation: sync-spin 1s linear infinite; }
 
 .decision-panel { margin-top: 1.2rem; padding: 1.2rem 1.35rem 1.35rem; background: var(--color-brand-deep); color: white; }
@@ -353,8 +395,14 @@
 .bookings-empty a { color: var(--color-brand); font-size: 0.56rem; font-weight: 800; }
 
 .decision-dialog {
+    position: fixed;
+    inset: 0;
     width: min(27rem, calc(100vw - 2rem));
+    max-height: calc(100dvh - 2rem);
+    margin: auto;
     padding: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
     border: 0;
     border-radius: 0.6rem 1.8rem 0.6rem 1.8rem;
     background: var(--bookings-paper);
@@ -376,7 +424,7 @@
 .dialog-actions button { min-height: 2.8rem; cursor: pointer; border: 1px solid var(--color-line); border-radius: 0.65rem; background: transparent; font: inherit; font-size: 0.56rem; font-weight: 800; }
 .dialog-actions button[type='submit'] { border-color: var(--color-brand-deep); background: var(--color-brand-deep); color: white; }
 .decision-dialog.is-rejecting .dialog-icon { background: #ffe4e4; }
-.decision-dialog.is-rejecting .dialog-actions button[type='submit'] { border-color: var(--color-danger); background: var(--color-danger); }
+.decision-dialog.is-rejecting .dialog-actions button[type='submit'] { border-color: var(--color-danger); background: var(--color-danger); color: white; box-shadow: 0 10px 24px rgba(200, 74, 74, 0.22); }
 
 .bookings-enter { animation: bookings-enter 720ms var(--ease-out) both; animation-delay: var(--enter-delay, 0ms); }
 
@@ -389,7 +437,7 @@
     .booking-filters > button { align-self: stretch; }
     .bookings-workspace { grid-template-columns: 1fr; }
     .booking-detail { position: static; display: grid; grid-template-columns: 1fr 1fr; }
-    .detail-accent, .detail-heading, .decision-panel { grid-column: 1 / -1; }
+    .detail-accent, .detail-heading, .capacity-review, .processing-note, .decision-panel { grid-column: 1 / -1; }
     .detail-customer { margin-bottom: 1rem; }
     .status-matrix { align-self: start; margin-top: 1.35rem; }
     .integration-note { align-self: end; }
@@ -408,7 +456,7 @@
     .booking-row time { display: none; }
     .booking-row .queue-payment { display: none; }
     .booking-detail { grid-template-columns: 1fr; }
-    .detail-accent, .detail-heading, .decision-panel { grid-column: auto; }
+    .detail-accent, .detail-heading, .capacity-review, .processing-note, .decision-panel { grid-column: auto; }
     .status-matrix { margin-top: 0; }
 }
 
@@ -427,6 +475,8 @@
     .queue-customer { padding-left: 3rem; }
     .detail-facts { grid-template-columns: 1fr; }
     .status-matrix { grid-template-columns: 1fr; }
+    .capacity-review header { align-items: start; flex-direction: column; }
+    .overlap-list a { align-items: start; flex-direction: column; gap: 0.25rem; }
     .decision-panel > div, .dialog-actions { grid-template-columns: 1fr; }
 }
 

@@ -36,13 +36,26 @@ class ScheduleController extends Controller
 
         $days = collect(range(0, 6))->map(function (int $offset) use ($weekStart, $appointments): array {
             $date = $weekStart->copy()->addDays($offset);
+            $dayAppointments = $appointments
+                ->filter(fn (array $appointment): bool => $appointment['appointment_at']->isSameDay($date))
+                ->sortBy('appointment_at')
+                ->values();
 
             return [
                 'date' => $date,
                 'is_today' => $date->isToday(),
-                'appointments' => $appointments
-                    ->filter(fn (array $appointment): bool => $appointment['appointment_at']->isSameDay($date))
-                    ->sortBy('appointment_at')
+                'appointment_count' => $dayAppointments->count(),
+                'slots' => $dayAppointments
+                    ->groupBy(fn (array $appointment): string => $appointment['appointment_at']->format('H:i'))
+                    ->map(function (Collection $slotAppointments): array {
+                        $firstAppointment = $slotAppointments->first();
+
+                        return [
+                            'time' => $firstAppointment['appointment_at'],
+                            'appointments' => $slotAppointments->values(),
+                            'is_shared' => $slotAppointments->count() > 1,
+                        ];
+                    })
                     ->values(),
             ];
         });
@@ -82,7 +95,7 @@ class ScheduleController extends Controller
             'date' => ['required', 'date_format:Y-m-d'],
         ]);
 
-        $knownReferences = ['PDL-1041', 'PDL-1042', 'PDL-1046', 'PDL-1045', 'PDL-1050'];
+        $knownReferences = ['PDL-1041', 'PDL-1042', 'PDL-1053', 'PDL-1054', 'PDL-1046', 'PDL-1045', 'PDL-1050'];
         abort_unless(in_array($booking, $knownReferences, true), 404);
 
         $overrides = $request->session()->get('manager_calendar_sync_overrides', []);
@@ -128,6 +141,30 @@ class ScheduleController extends Controller
                 'calendar_status' => ['key' => 'synchronized', 'label' => 'Synchronized'],
                 'repair_status' => null,
                 'calendar_event_id' => 'gcal_pdl_1042',
+                'sync_attempts' => 0,
+            ],
+            [
+                'reference' => 'PDL-1053',
+                'customer' => ['name' => 'Jules Aquino', 'initials' => 'JA', 'email' => 'jules.aquino@example.com', 'phone' => '+63 917 000 1053'],
+                'service' => 'Safety inspection',
+                'appointment_at' => $weekStart->copy()->addDay()->setTime(11, 30),
+                'booking_status' => ['key' => 'confirmed', 'label' => 'Confirmed'],
+                'payment_status' => ['key' => 'successful', 'label' => 'Successful'],
+                'calendar_status' => ['key' => 'synchronized', 'label' => 'Synchronized'],
+                'repair_status' => null,
+                'calendar_event_id' => 'gcal_pdl_1053',
+                'sync_attempts' => 0,
+            ],
+            [
+                'reference' => 'PDL-1054',
+                'customer' => ['name' => 'Carlo Reyes', 'initials' => 'CR', 'email' => 'carlo.reyes@example.com', 'phone' => '+63 917 000 1054'],
+                'service' => 'Wheel alignment',
+                'appointment_at' => $weekStart->copy()->addDay()->setTime(14, 0),
+                'booking_status' => ['key' => 'confirmed', 'label' => 'Confirmed'],
+                'payment_status' => ['key' => 'pending', 'label' => 'Pending'],
+                'calendar_status' => ['key' => 'pending', 'label' => 'Pending sync'],
+                'repair_status' => null,
+                'calendar_event_id' => null,
                 'sync_attempts' => 0,
             ],
             [

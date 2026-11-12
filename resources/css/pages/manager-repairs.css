@@ -60,11 +60,20 @@
 .repair-summary span { color: var(--color-muted); font-size: 0.52rem; }
 .repair-summary strong { grid-row: span 2; font-size: 1.8rem; font-weight: 500; letter-spacing: -0.07em; }
 .repair-summary small { color: rgba(81, 96, 89, 0.68); font-size: 0.43rem; }
-.repair-summary .summary-unrecorded { background: #fff6df; }
-.repair-summary .summary-unrecorded strong { color: #a26a18; }
+.repair-summary .summary-at-shop { background: #fff6df; }
+.repair-summary .summary-at-shop strong { color: #a26a18; }
+.repair-summary .summary-progress { background: #edf6f2; }
+.repair-summary .summary-progress strong { color: var(--color-brand); }
 .repair-summary .summary-completed { background: var(--color-brand-deep); }
 .repair-summary .summary-completed span, .repair-summary .summary-completed small { color: rgba(255, 255, 255, 0.52); }
 .repair-summary .summary-completed strong { color: var(--color-accent); }
+
+.repair-view-tabs { display: inline-grid; grid-template-columns: 1fr 1fr; gap: 0.35rem; margin-top: 1.1rem; padding: 0.3rem; border: 1px solid rgba(16, 32, 27, 0.09); border-radius: 999px; background: rgba(255, 255, 255, 0.56); }
+.repair-view-tabs a { display: flex; min-height: 2.5rem; align-items: center; gap: 0.65rem; padding: 0 0.85rem; border-radius: 999px; color: var(--color-muted); font-size: 0.52rem; font-weight: 800; text-decoration: none; transition: color 180ms ease, background-color 180ms ease, transform 180ms ease; }
+.repair-view-tabs a:hover { transform: translateY(-1px); color: var(--color-brand); }
+.repair-view-tabs a.is-active { background: var(--color-brand-deep); color: white; }
+.repair-view-tabs strong { display: grid; min-width: 1.35rem; height: 1.35rem; place-items: center; border-radius: 50%; background: rgba(16, 32, 27, 0.08); font-size: 0.46rem; }
+.repair-view-tabs a.is-active strong { background: var(--color-accent); color: var(--color-brand-deep); }
 
 .repair-filters { display: grid; align-items: center; grid-template-columns: minmax(13rem, 0.8fr) 1fr auto; gap: 0.7rem; margin: 1rem 0 2.4rem; padding: 0.7rem; border-radius: 0.9rem; background: rgba(255, 255, 255, 0.7); box-shadow: 0 14px 35px rgba(12, 40, 34, 0.05); }
 .repair-filters > label { display: grid; min-height: 2.8rem; align-items: center; grid-template-columns: 1.1rem 1fr; gap: 0.6rem; padding: 0 0.75rem; border: 1px solid var(--color-line); border-radius: 0.65rem; background: var(--repair-paper); }
@@ -87,8 +96,11 @@
 .repair-ticket::before { position: absolute; top: 0; bottom: 0; left: 0; width: 0.2rem; background: #b4bdb8; content: ''; }
 .repair-ticket:hover { transform: translateY(-2px); background: white; box-shadow: 0 14px 28px rgba(12, 40, 34, 0.07); }
 .repair-ticket.is-selected { background: white; box-shadow: inset 0 0 0 1px var(--color-brand); }
-.repair-ticket.is-completed::before { background: var(--color-success); }
-.repair-ticket.is-unrecorded::before { background: var(--color-warning); }
+.repair-ticket.repair-awaiting_arrival::before { background: #aeb8b2; }
+.repair-ticket.repair-at_shop::before { background: var(--color-warning); }
+.repair-ticket.repair-in_progress::before { background: var(--color-brand); }
+.repair-ticket.repair-completed::before { background: var(--color-success); }
+.repair-ticket.repair-claimed::before { background: var(--color-brand-deep); }
 .ticket-index { color: rgba(81, 96, 89, 0.48); font-family: Georgia, 'Times New Roman', serif; font-size: 1.2rem; }
 .ticket-copy { display: grid; gap: 0.15rem; }
 .ticket-copy > span { color: var(--color-brand); font-size: 0.46rem; font-weight: 800; }
@@ -98,20 +110,31 @@
 .ticket-date span { color: var(--color-muted); font-size: 0.44rem; }
 .ticket-date time { font-size: 0.5rem; font-weight: 700; }
 .ticket-status { display: inline-flex; min-height: 1.8rem; align-items: center; padding-inline: 0.65rem; border-radius: 999px; font-size: 0.46rem; font-weight: 800; white-space: nowrap; }
+.status-awaiting_arrival { background: #edf0ee; color: #5e6b65; }
+.status-at_shop { background: #fff1cf; color: #9a6415; }
+.status-in_progress { background: #dceee8; color: var(--color-brand); }
 .status-completed { background: #dff3e7; color: var(--color-success); }
-.status-unrecorded { background: #fff1cf; color: #9a6415; }
+.status-claimed { background: var(--color-brand-deep); color: var(--color-accent); }
 .repair-ticket > svg { width: 0.85rem; fill: none; stroke: var(--color-muted); stroke-width: 1.7; }
 
 .repair-inspector { position: relative; overflow: hidden; border: 1px solid rgba(16, 32, 27, 0.1); border-radius: 1.8rem 0.45rem 1.8rem 0.45rem; background: var(--repair-paper); box-shadow: 0 24px 65px rgba(12, 40, 34, 0.1); }
 .inspector-grid { position: absolute; inset: 0; background-image: linear-gradient(var(--repair-grid) 1px, transparent 1px), linear-gradient(90deg, var(--repair-grid) 1px, transparent 1px); background-size: 2.5rem 2.5rem; mask-image: linear-gradient(to bottom, black, transparent 55%); pointer-events: none; }
-.inspector-heading, .repair-customer, .repair-service-card, .repair-status-grid, .audit-trail, .completion-action, .completion-recorded { position: relative; }
+.inspector-heading, .repair-customer, .repair-service-card, .repair-status-grid, .audit-trail, .completion-action, .completion-recorded, .payment-lock { position: relative; }
 .inspector-heading { display: flex; align-items: start; justify-content: space-between; gap: 1rem; padding: 1.4rem 1.5rem 1rem; }
 .inspector-heading h2 { margin: 0.3rem 0 0; font-size: 1.85rem; font-weight: 500; letter-spacing: -0.06em; }
 .completion-stamp { display: grid; width: 5.7rem; height: 5.7rem; place-content: center; transform: rotate(7deg); border: 2px solid var(--color-success); border-radius: 50%; color: var(--color-success); text-align: center; }
 .completion-stamp span { font-size: 0.42rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; }
 .completion-stamp strong { font-family: Georgia, 'Times New Roman', serif; font-size: 0.8rem; font-style: italic; }
-.unrecorded-mark { display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.55rem 0.65rem; border-radius: 999px; background: #fff1cf; color: #9a6415; font-size: 0.46rem; font-weight: 800; }
-.unrecorded-mark i { width: 0.45rem; height: 0.45rem; border-radius: 50%; background: var(--color-warning); animation: unrecorded-pulse 2s ease-in-out infinite; }
+.repair-state-mark { display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.55rem 0.65rem; border-radius: 999px; font-size: 0.46rem; font-weight: 800; }
+.repair-state-mark i { width: 0.45rem; height: 0.45rem; border-radius: 50%; animation: unrecorded-pulse 2s ease-in-out infinite; }
+.repair-state-mark.state-awaiting_arrival { background: #edf0ee; color: #5e6b65; }
+.repair-state-mark.state-awaiting_arrival i { background: #8b9891; }
+.repair-state-mark.state-at_shop { background: #fff1cf; color: #9a6415; }
+.repair-state-mark.state-at_shop i { background: var(--color-warning); }
+.repair-state-mark.state-in_progress { background: #dceee8; color: var(--color-brand); }
+.repair-state-mark.state-in_progress i { background: var(--color-brand); }
+.repair-state-mark.state-completed { background: #dff3e7; color: var(--color-success); }
+.repair-state-mark.state-completed i { background: var(--color-success); }
 
 .repair-customer { display: grid; align-items: center; grid-template-columns: 3.25rem 1fr; gap: 0.8rem; margin: 0 1.5rem; padding: 1rem 0; border-top: 1px solid var(--color-line); border-bottom: 1px solid var(--color-line); }
 .repair-customer > span { display: grid; width: 3.25rem; height: 3.25rem; place-items: center; border-radius: 0.7rem 1.2rem 0.7rem 1.2rem; background: var(--color-brand-deep); color: var(--color-accent); font-size: 0.7rem; font-weight: 800; }
@@ -129,7 +152,10 @@
 .repair-status-grid > div { display: grid; gap: 0.25rem; padding: 0.7rem; border-right: 1px solid var(--color-line); border-bottom: 1px solid var(--color-line); }
 .repair-status-grid dt { color: var(--color-muted); font-size: 0.42rem; }
 .repair-status-grid dd { margin: 0; font-size: 0.5rem; font-weight: 800; }
-.text-confirmed, .text-successful, .text-synchronized, .text-completed { color: var(--color-success); }
+.text-confirmed, .text-successful, .text-synchronized, .text-completed, .text-claimed { color: var(--color-success); }
+.text-awaiting_arrival { color: #69766f; }
+.text-at_shop { color: #9a6415; }
+.text-in_progress { color: var(--color-brand); }
 .text-pending { color: var(--color-warning); }
 .text-failed { color: var(--color-danger); }
 
@@ -139,7 +165,9 @@
 .audit-trail ol::before { position: absolute; top: 0.4rem; bottom: 0.4rem; left: 0.26rem; width: 1px; background: var(--color-line); content: ''; }
 .audit-trail li { position: relative; display: grid; grid-template-columns: 0.55rem 1fr; gap: 0.7rem; }
 .audit-trail li > i { z-index: 1; width: 0.55rem; height: 0.55rem; margin-top: 0.15rem; border: 2px solid var(--repair-paper); border-radius: 50%; background: #aeb8b2; box-shadow: 0 0 0 1px var(--color-line); }
-.audit-trail li.audit-completed > i, .audit-trail li.audit-confirmed > i, .audit-trail li.audit-synchronized > i { background: var(--color-success); }
+.audit-trail li.audit-completed > i, .audit-trail li.audit-claimed > i, .audit-trail li.audit-confirmed > i, .audit-trail li.audit-synchronized > i { background: var(--color-success); }
+.audit-trail li.audit-at-shop > i { background: var(--color-warning); }
+.audit-trail li.audit-in-progress > i { background: var(--color-brand); }
 .audit-trail li > div { display: grid; gap: 0.15rem; }
 .audit-trail strong { font-size: 0.54rem; }
 .audit-trail p { margin: 0; color: var(--color-muted); font-size: 0.46rem; line-height: 1.5; }
@@ -151,6 +179,11 @@
 .completion-action strong { font-size: 0.66rem; }
 .completion-action p { max-width: 26rem; margin: 0; color: rgba(255, 255, 255, 0.48); font-size: 0.45rem; line-height: 1.55; }
 .completion-action button { display: inline-flex; min-height: 2.8rem; align-items: center; gap: 1rem; padding-inline: 0.9rem; cursor: pointer; border: 0; border-radius: 0.65rem; background: var(--color-accent); color: var(--color-brand-deep); font: inherit; font-size: 0.52rem; font-weight: 800; }
+.payment-lock { display: grid; align-items: center; grid-template-columns: 2rem 1fr; gap: 0.75rem; margin-top: 1.4rem; padding: 1.1rem 1.5rem; background: #fff1cf; }
+.payment-lock > span { display: grid; width: 2rem; height: 2rem; place-items: center; border-radius: 50%; background: var(--color-warning); color: white; font-size: 0.65rem; font-weight: 800; }
+.payment-lock > div { display: grid; gap: 0.18rem; }
+.payment-lock strong { color: #7e5314; font-size: 0.58rem; }
+.payment-lock p { margin: 0; color: #8f6b34; font-size: 0.46rem; line-height: 1.5; }
 .completion-recorded { display: grid; align-items: center; grid-template-columns: 2rem 1fr; gap: 0.7rem; margin-top: 1.4rem; padding: 1.1rem 1.5rem; background: #dff3e7; }
 .completion-recorded > span { display: grid; width: 2rem; height: 2rem; place-items: center; border-radius: 50%; background: var(--color-success); color: white; font-size: 0.6rem; font-weight: 800; }
 .completion-recorded > div { display: grid; gap: 0.15rem; }
@@ -163,7 +196,7 @@
 .repairs-empty p { margin: 0; font-size: 0.52rem; }
 .repairs-empty a { color: var(--color-brand); font-size: 0.54rem; font-weight: 800; }
 
-.completion-dialog { width: min(28rem, calc(100vw - 2rem)); padding: 0; border: 0; border-radius: 1.8rem 0.5rem 1.8rem 0.5rem; background: var(--repair-paper); color: var(--color-ink); box-shadow: 0 35px 90px rgba(5, 23, 18, 0.34); }
+.completion-dialog { position: fixed; inset: 0; width: min(28rem, calc(100vw - 2rem)); max-height: calc(100dvh - 2rem); margin: auto; padding: 0; overflow-y: auto; overscroll-behavior: contain; border: 0; border-radius: 1.8rem 0.5rem 1.8rem 0.5rem; background: var(--repair-paper); color: var(--color-ink); box-shadow: 0 35px 90px rgba(5, 23, 18, 0.34); }
 .completion-dialog::backdrop { background: rgba(4, 19, 15, 0.64); backdrop-filter: blur(5px); }
 .completion-dialog form { padding: 1.6rem; }
 .dialog-check { display: grid; width: 3rem; height: 3rem; margin-bottom: 1.2rem; place-items: center; border-radius: 50%; background: var(--color-accent); color: var(--color-brand-deep); font-size: 0.85rem; font-weight: 800; }
@@ -186,7 +219,7 @@
 @media (max-width: 1180px) {
     .repairs-workspace { grid-template-columns: 1fr; }
     .repair-inspector { display: grid; grid-template-columns: 0.85fr 1.15fr; }
-    .inspector-grid, .inspector-heading, .completion-action, .completion-recorded { grid-column: 1 / -1; }
+    .inspector-grid, .inspector-heading, .completion-action, .completion-recorded, .payment-lock { grid-column: 1 / -1; }
     .repair-customer, .repair-service-card { align-self: start; }
     .repair-status-grid { align-self: start; grid-template-columns: 1fr 1fr; }
     .audit-trail { margin-bottom: 1.5rem; }
@@ -203,7 +236,7 @@
     .repair-ticket { grid-template-columns: 2rem minmax(9rem, 1fr) auto 0.8rem; }
     .ticket-date { display: none; }
     .repair-inspector { grid-template-columns: 1fr; }
-    .inspector-grid, .inspector-heading, .completion-action, .completion-recorded { grid-column: auto; }
+    .inspector-grid, .inspector-heading, .completion-action, .completion-recorded, .payment-lock { grid-column: auto; }
     .repair-status-grid { grid-template-columns: 1fr 1fr; }
 }
 
@@ -226,5 +259,5 @@
 
 @media (prefers-reduced-motion: reduce) {
     .repairs-enter { opacity: 1; transform: none; animation: none; }
-    .intro-rule i::after, .unrecorded-mark i { animation: none; }
+    .intro-rule i::after, .repair-state-mark i { animation: none; }
 }

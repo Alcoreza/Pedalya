@@ -114,27 +114,38 @@
                     </div>
                     <div class="intro-rule">
                         <i aria-hidden="true"></i>
-                        <p>Record the final repair outcome clearly. Intermediate repair stages remain configurable until the team approves them.</p>
+                        <p>Track every workshop handoff from bike arrival to customer claim, with payment verified before repair work begins.</p>
                     </div>
                 </section>
 
                 <section class="repair-summary repairs-enter" style="--enter-delay: 130ms" aria-label="Repair overview">
-                    <article><span>Workshop records</span><strong>{{ str_pad($summary['all'], 2, '0', STR_PAD_LEFT) }}</strong><small>Confirmed bookings</small></article>
-                    <article class="summary-unrecorded"><span>Status not recorded</span><strong>{{ str_pad($summary['unrecorded'], 2, '0', STR_PAD_LEFT) }}</strong><small>Needs manager update</small></article>
-                    <article><span>Completed</span><strong>{{ str_pad($summary['completed'], 2, '0', STR_PAD_LEFT) }}</strong><small>Recorded repairs</small></article>
-                    <article class="summary-completed"><span>Completed today</span><strong>{{ str_pad($summary['completed_today'], 2, '0', STR_PAD_LEFT) }}</strong><small>Customer-visible updates</small></article>
+                    <article><span>Awaiting arrival today</span><strong>{{ str_pad($summary['awaiting_today'], 2, '0', STR_PAD_LEFT) }}</strong><small>Scheduled intake</small></article>
+                    <article class="summary-at-shop"><span>Bike at shop</span><strong>{{ str_pad($summary['at_shop'], 2, '0', STR_PAD_LEFT) }}</strong><small>Awaiting workshop start</small></article>
+                    <article class="summary-progress"><span>Repair in progress</span><strong>{{ str_pad($summary['in_progress'], 2, '0', STR_PAD_LEFT) }}</strong><small>Active workshop work</small></article>
+                    <article class="summary-completed"><span>Completed today</span><strong>{{ str_pad($summary['completed_today'], 2, '0', STR_PAD_LEFT) }}</strong><small>Ready for pickup</small></article>
                 </section>
 
+                <nav class="repair-view-tabs repairs-enter" style="--enter-delay: 160ms" aria-label="Repair record views">
+                    <a class="{{ $filters['tab'] === 'active' ? 'is-active' : '' }}" href="{{ route('manager.repairs.index', array_filter(['search' => $filters['search'], 'tab' => 'active'])) }}">
+                        <span>Active repairs</span><strong>{{ $tabCounts['active'] }}</strong>
+                    </a>
+                    <a class="{{ $filters['tab'] === 'records' ? 'is-active' : '' }}" href="{{ route('manager.repairs.index', array_filter(['search' => $filters['search'], 'tab' => 'records'])) }}">
+                        <span>Completed records</span><strong>{{ $tabCounts['records'] }}</strong>
+                    </a>
+                </nav>
+
                 <form class="repair-filters repairs-enter" style="--enter-delay: 180ms" method="GET" action="{{ route('manager.repairs.index') }}">
+                    <input type="hidden" name="tab" value="{{ $filters['tab'] }}">
                     <label>
                         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m16 16 4 4"></path></svg>
                         <span class="sr-only">Search repairs</span>
                         <input type="search" name="search" value="{{ $filters['search'] }}" placeholder="Reference, customer, or service">
                     </label>
                     <div role="group" aria-label="Filter repair records">
-                        <a class="{{ $filters['status'] === '' ? 'is-active' : '' }}" href="{{ route('manager.repairs.index', array_filter(['search' => $filters['search']])) }}">All</a>
-                        <a class="{{ $filters['status'] === 'unrecorded' ? 'is-active' : '' }}" href="{{ route('manager.repairs.index', array_filter(['search' => $filters['search'], 'status' => 'unrecorded'])) }}">Status not recorded</a>
-                        <a class="{{ $filters['status'] === 'completed' ? 'is-active' : '' }}" href="{{ route('manager.repairs.index', array_filter(['search' => $filters['search'], 'status' => 'completed'])) }}">Completed</a>
+                        <a class="{{ $filters['status'] === '' ? 'is-active' : '' }}" href="{{ route('manager.repairs.index', array_filter(['search' => $filters['search'], 'tab' => $filters['tab']])) }}">All</a>
+                        @foreach ($statusOptions as $value => $label)
+                            <a class="{{ $filters['status'] === $value ? 'is-active' : '' }}" href="{{ route('manager.repairs.index', array_filter(['search' => $filters['search'], 'tab' => $filters['tab'], 'status' => $value])) }}">{{ $label }}</a>
+                        @endforeach
                     </div>
                     <button type="submit">Search <span aria-hidden="true">→</span></button>
                 </form>
@@ -142,13 +153,13 @@
                 <div class="repairs-workspace repairs-enter" style="--enter-delay: 230ms">
                     <section class="repair-ledger" aria-labelledby="repair-ledger-title">
                         <div class="ledger-heading">
-                            <div><span>Current view</span><h2 id="repair-ledger-title">{{ $repairs->count() }} {{ Str::plural('record', $repairs->count()) }}</h2></div>
-                            <small>Discrete statuses only</small>
+                            <div><span>{{ $filters['tab'] === 'records' ? 'Workshop history' : 'Current workshop' }}</span><h2 id="repair-ledger-title">{{ $repairs->count() }} {{ Str::plural('record', $repairs->count()) }}</h2></div>
+                            <small>{{ $filters['tab'] === 'records' ? 'Completed and claimed' : 'Unfinished work stays visible' }}</small>
                         </div>
 
                         <div class="repair-tickets">
                             @forelse ($repairs as $repair)
-                                <a class="repair-ticket {{ $selectedRepair['reference'] === $repair['reference'] ? 'is-selected' : '' }} {{ $repair['repair_status'] ? 'is-completed' : 'is-unrecorded' }}" href="{{ route('manager.repairs.index', array_merge(request()->except('repair'), ['repair' => $repair['reference']])) }}" aria-label="View repair {{ $repair['reference'] }}">
+                                <a class="repair-ticket repair-{{ $repair['repair_status']['key'] }} {{ $selectedRepair['reference'] === $repair['reference'] ? 'is-selected' : '' }}" href="{{ route('manager.repairs.index', array_merge(request()->except('repair'), ['repair' => $repair['reference']])) }}" aria-label="View repair {{ $repair['reference'] }}">
                                     <span class="ticket-index">{{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span>
                                     <div class="ticket-copy">
                                         <span>{{ $repair['reference'] }}</span>
@@ -159,11 +170,7 @@
                                         <span>Appointment</span>
                                         <time datetime="{{ $repair['appointment_at']->toIso8601String() }}">{{ $repair['appointment_at']->format('M d · g:i A') }}</time>
                                     </div>
-                                    @if ($repair['repair_status'])
-                                        <span class="ticket-status status-completed">Completed</span>
-                                    @else
-                                        <span class="ticket-status status-unrecorded">Status not recorded</span>
-                                    @endif
+                                    <span class="ticket-status status-{{ $repair['repair_status']['key'] }}">{{ $repair['repair_status']['label'] }}</span>
                                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"></path></svg>
                                 </a>
                             @empty
@@ -171,13 +178,23 @@
                                     <span aria-hidden="true">◇</span>
                                     <strong>No matching repair records</strong>
                                     <p>Change or clear the filters to view other records.</p>
-                                    <a href="{{ route('manager.repairs.index') }}">Clear filters</a>
+                                    <a href="{{ route('manager.repairs.index', ['tab' => $filters['tab']]) }}">Clear filters</a>
                                 </div>
                             @endforelse
                         </div>
                     </section>
 
                     @if ($selectedRepair)
+                        @php
+                            $repairKey = $selectedRepair['repair_status']['key'];
+                            $transition = match ($repairKey) {
+                                'awaiting_arrival' => ['route' => route('manager.repairs.arrive', $selectedRepair['reference']), 'eyebrow' => 'Workshop intake', 'title' => 'Has the bike arrived?', 'copy' => 'Record the physical handoff before any workshop work begins.', 'button' => 'Mark bike as arrived', 'dialogTitle' => 'Confirm bike arrival?', 'dialogCopy' => 'This records the bike at the shop and adds the manager and arrival time to the audit trail.', 'submit' => 'Confirm arrival', 'icon' => '↓'],
+                                'at_shop' => $selectedRepair['payment_status']['key'] === 'successful' ? ['route' => route('manager.repairs.start', $selectedRepair['reference']), 'eyebrow' => 'Workshop handoff', 'title' => 'Ready to begin the repair?', 'copy' => 'Payment is verified. Starting records the manager and workshop start time.', 'button' => 'Start repair', 'dialogTitle' => 'Start this repair?', 'dialogCopy' => 'The customer-visible repair status will change to Repair in progress.', 'submit' => 'Start repair', 'icon' => '→'] : null,
+                                'in_progress' => ['route' => route('manager.repairs.complete', $selectedRepair['reference']), 'eyebrow' => 'Final repair status', 'title' => 'Repair work finished?', 'copy' => 'Completion moves this record to Completed records for customer pickup.', 'button' => 'Mark as completed', 'dialogTitle' => 'Mark this repair completed?', 'dialogCopy' => 'The repair will be recorded as completed and ready for customer pickup.', 'submit' => 'Mark completed', 'icon' => '✓'],
+                                'completed' => ['route' => route('manager.repairs.claim', $selectedRepair['reference']), 'eyebrow' => 'Customer handoff', 'title' => 'Has the bike been collected?', 'copy' => 'Only confirm this after the bike has been handed back to the customer.', 'button' => 'Mark bike as claimed', 'dialogTitle' => 'Confirm customer claim?', 'dialogCopy' => 'This closes the workshop lifecycle and records who confirmed the handoff.', 'submit' => 'Mark as claimed', 'icon' => '↗'],
+                                default => null,
+                            };
+                        @endphp
                         <aside class="repair-inspector" aria-labelledby="repair-detail-title">
                             <div class="inspector-grid" aria-hidden="true"></div>
                             <div class="inspector-heading">
@@ -185,10 +202,10 @@
                                     <span>Repair record</span>
                                     <h2 id="repair-detail-title">{{ $selectedRepair['reference'] }}</h2>
                                 </div>
-                                @if ($selectedRepair['repair_status'])
-                                    <div class="completion-stamp"><span>Repair</span><strong>Completed</strong></div>
+                                @if ($repairKey === 'claimed')
+                                    <div class="completion-stamp"><span>Bike</span><strong>Claimed</strong></div>
                                 @else
-                                    <div class="unrecorded-mark"><i></i><span>Status not recorded</span></div>
+                                    <div class="repair-state-mark state-{{ $repairKey }}"><i></i><span>{{ $selectedRepair['repair_status']['label'] }}</span></div>
                                 @endif
                             </div>
 
@@ -211,7 +228,7 @@
                                 <div><dt>Booking</dt><dd class="text-confirmed">{{ $selectedRepair['booking_status']['label'] }}</dd></div>
                                 <div><dt>Payment</dt><dd class="text-{{ $selectedRepair['payment_status']['key'] }}">{{ $selectedRepair['payment_status']['label'] }}</dd></div>
                                 <div><dt>Calendar</dt><dd class="text-{{ $selectedRepair['calendar_status']['key'] }}">{{ $selectedRepair['calendar_status']['label'] }}</dd></div>
-                                <div><dt>Repair</dt><dd class="{{ $selectedRepair['repair_status'] ? 'text-completed' : '' }}">{{ $selectedRepair['repair_status']['label'] ?? 'Not yet recorded' }}</dd></div>
+                                <div><dt>Repair</dt><dd class="text-{{ $repairKey }}">{{ $selectedRepair['repair_status']['label'] }}</dd></div>
                             </dl>
 
                             <section class="audit-trail" aria-labelledby="audit-title">
@@ -226,15 +243,20 @@
                                 </ol>
                             </section>
 
-                            @if ($selectedRepair['repair_status'] === null)
-                                <div class="completion-action">
-                                    <div><span>Final repair status</span><strong>Ready to close this repair?</strong><p>This records the approved final status without adding an unapproved intermediate stage.</p></div>
-                                    <button type="button" data-completion-open>Mark as completed <span aria-hidden="true">✓</span></button>
+                            @if ($transition)
+                                <div class="completion-action action-{{ $repairKey }}">
+                                    <div><span>{{ $transition['eyebrow'] }}</span><strong>{{ $transition['title'] }}</strong><p>{{ $transition['copy'] }}</p></div>
+                                    <button type="button" data-transition-open>{{ $transition['button'] }} <span aria-hidden="true">{{ $transition['icon'] }}</span></button>
+                                </div>
+                            @elseif ($repairKey === 'at_shop')
+                                <div class="payment-lock">
+                                    <span aria-hidden="true">!</span>
+                                    <div><strong>Payment required before repair can begin</strong><p>Current payment status: {{ $selectedRepair['payment_status']['label'] }}. The bike remains recorded at the shop.</p></div>
                                 </div>
                             @else
                                 <div class="completion-recorded">
                                     <span aria-hidden="true">✓</span>
-                                    <div><strong>Completion recorded</strong><p>{{ $selectedRepair['completed_at']->format('F d, Y · g:i A') }} by {{ $selectedRepair['completed_by'] }}</p></div>
+                                    <div><strong>Workshop lifecycle closed</strong><p>{{ $selectedRepair['claimed_at']->format('F d, Y · g:i A') }} by {{ $selectedRepair['claimed_by'] }}</p></div>
                                 </div>
                             @endif
                         </aside>
@@ -243,22 +265,22 @@
             </main>
         </div>
 
-        @if ($selectedRepair && $selectedRepair['repair_status'] === null)
-            <dialog class="completion-dialog" data-completion-dialog>
-                <form method="POST" action="{{ route('manager.repairs.complete', $selectedRepair['reference']) }}">
+        @if ($selectedRepair && $transition)
+            <dialog class="completion-dialog" data-transition-dialog>
+                <form method="POST" action="{{ $transition['route'] }}">
                     @csrf
-                    <div class="dialog-check" aria-hidden="true">✓</div>
-                    <span>Final status update</span>
-                    <h2>Mark this repair completed?</h2>
-                    <p>The completed status will be available to the customer. This action does not change payment, booking, or calendar states.</p>
+                    <div class="dialog-check" aria-hidden="true">{{ $transition['icon'] }}</div>
+                    <span>{{ $transition['eyebrow'] }}</span>
+                    <h2>{{ $transition['dialogTitle'] }}</h2>
+                    <p>{{ $transition['dialogCopy'] }} Booking, payment, and calendar states remain separate.</p>
                     <div class="dialog-record">
                         <span>{{ $selectedRepair['reference'] }}</span>
                         <strong>{{ $selectedRepair['customer']['name'] }}</strong>
                         <small>{{ $selectedRepair['service'] }}</small>
                     </div>
                     <div class="dialog-actions">
-                        <button type="button" data-completion-close>Go back</button>
-                        <button type="submit" data-completion-submit>Mark completed</button>
+                        <button type="button" data-transition-close>Go back</button>
+                        <button type="submit" data-transition-submit>{{ $transition['submit'] }}</button>
                     </div>
                 </form>
             </dialog>

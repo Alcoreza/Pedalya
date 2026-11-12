@@ -19,26 +19,26 @@ window.addEventListener('resize', () => {
     if (window.innerWidth > 820) setSidebar(false);
 });
 
-const completionDialog = document.querySelector('[data-completion-dialog]');
+const transitionDialog = document.querySelector('[data-transition-dialog]');
 
-document.querySelector('[data-completion-open]')?.addEventListener('click', () => {
-    completionDialog?.showModal();
+document.querySelector('[data-transition-open]')?.addEventListener('click', () => {
+    transitionDialog?.showModal();
 });
 
-completionDialog?.querySelector('[data-completion-close]')?.addEventListener('click', () => {
-    completionDialog.close();
+transitionDialog?.querySelector('[data-transition-close]')?.addEventListener('click', () => {
+    transitionDialog.close();
 });
 
-completionDialog?.addEventListener('click', (event) => {
-    if (event.target === completionDialog) completionDialog.close();
+transitionDialog?.addEventListener('click', (event) => {
+    if (event.target === transitionDialog) transitionDialog.close();
 });
 
-completionDialog?.querySelector('form')?.addEventListener('submit', () => {
-    const button = completionDialog.querySelector('[data-completion-submit]');
+transitionDialog?.querySelector('form')?.addEventListener('submit', () => {
+    const button = transitionDialog.querySelector('[data-transition-submit]');
     if (!button) return;
 
     button.disabled = true;
-    button.textContent = 'Saving completion…';
+    button.textContent = 'Saving update…';
 });
 
 document.querySelector('[data-notice-dismiss]')?.addEventListener('click', (event) => {
@@ -49,5 +49,5 @@ document.addEventListener('keydown', (event) => {
     if (event.key !== 'Escape') return;
 
     setSidebar(false);
-    if (completionDialog?.open) completionDialog.close();
+    if (transitionDialog?.open) transitionDialog.close();
 });
