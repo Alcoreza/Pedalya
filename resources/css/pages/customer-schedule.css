@@ -4,6 +4,12 @@
 .selected-service-summary { max-width: 18rem; padding: .85rem 1rem; border: 1px solid var(--color-line); border-radius: .8rem; color: var(--color-brand-dark); background: rgba(255,255,255,.6); font-size: .78rem; font-weight: 800; line-height: 1.5; }
 .schedule-panel { padding: 1.5rem; border: 1px solid var(--color-line); border-radius: var(--radius-medium); background: rgba(255,255,255,.7); box-shadow: var(--shadow-card); }
 .schedule-panel-heading { display: flex; align-items: end; justify-content: space-between; gap: 1rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--color-line); }
+.calendar-preview-bar { display: grid; grid-template-columns: 2.35rem minmax(0, 1fr) auto; gap: .75rem; align-items: center; margin: 1.2rem 0 0; padding: .8rem .9rem; border: 1px solid rgba(31,100,84,.12); border-radius: .9rem; background: rgba(236,248,222,.62); }
+.calendar-preview-mark { display: grid; width: 2.35rem; height: 2.35rem; place-items: center; border-radius: .65rem; color: white; background: var(--color-brand); font-size: .75rem; font-weight: 800; }
+.calendar-preview-bar > div { display: grid; gap: .15rem; min-width: 0; }
+.calendar-preview-bar strong { color: var(--color-brand-deep); font-size: .76rem; }
+.calendar-preview-bar div span { color: var(--color-muted); font-size: .65rem; line-height: 1.35; }
+.calendar-preview-state { padding: .35rem .5rem; border-radius: 99rem; color: var(--color-brand); background: var(--color-accent-soft); font-size: .62rem; font-weight: 800; white-space: nowrap; }
 .schedule-panel-heading > div:first-child > span { color: var(--color-brand); font-size: .7rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
 .schedule-panel h2 { margin: .4rem 0 0; color: var(--color-brand-deep); font-size: 1.45rem; letter-spacing: -.04em; }
 .schedule-legend { display: flex; gap: 1rem; color: var(--color-muted); font-size: .7rem; font-weight: 700; }
@@ -20,6 +26,15 @@
 .slot-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .7rem; }
 .time-slot { display: flex; align-items: center; justify-content: space-between; gap: .5rem; padding: .9rem 1rem; border: 1px solid var(--color-line); border-radius: .7rem; color: var(--color-brand-dark); background: var(--color-surface); font: inherit; font-size: .82rem; font-weight: 800; cursor: pointer; transition: border-color 180ms ease, background 180ms ease; }
 .time-slot span { color: var(--color-success); font-size: .62rem; font-weight: 700; }.time-slot:hover, .time-slot.is-selected { border-color: var(--color-brand); background: var(--color-accent-soft); }
-.schedule-action-bar { margin-top: 1.4rem; }
+.schedule-action-bar { display: grid; grid-template-columns: 1fr auto; gap: .85rem 1rem; margin-top: 1.4rem; }
+.schedule-action-bar .selection-message { grid-column: 1 / -1; }
+.schedule-action-bar .customer-return-link { margin-bottom: 0; justify-self: start; align-self: center; }
+.schedule-action-bar .booking-next { justify-self: end; }
+@media (max-width: 480px) {
+    .schedule-action-bar { grid-template-columns: 1fr; }
+    .schedule-action-bar .customer-return-link,
+    .schedule-action-bar .booking-next { justify-self: stretch; justify-content: center; }
+}
 @media (max-width: 700px) { .schedule-intro, .schedule-panel-heading, .slot-heading { align-items: start; flex-direction: column; }.date-grid { grid-template-columns: repeat(5, minmax(4.5rem, 1fr)); overflow-x: auto; }.slot-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 480px) { .schedule-panel { padding: 1rem; }.schedule-legend { flex-wrap: wrap; }.slot-grid { grid-template-columns: 1fr; } }
+@media (max-width: 520px) { .calendar-preview-bar { grid-template-columns: 2.35rem minmax(0,1fr); }.calendar-preview-state { grid-column: 2; justify-self: start; } }
