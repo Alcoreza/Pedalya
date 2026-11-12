@@ -13,7 +13,7 @@
 @vite(['resources/css/app.css', 'resources/css/pages/customer-booking.css', 'resources/css/pages/customer-typography.css', 'resources/js/app.js', 'resources/js/pages/customer-booking.js'])
     </head>
     <body class="customer-booking-page">
-        <header class="customer-header">
+        {{-- Legacy header removed; the shared customer navigation is rendered below.
             <a class="brand" href="{{ route('home') }}" aria-label="Return to Pedalya home">
                 <span class="brand-mark" aria-hidden="true">
                     <svg viewBox="0 0 32 32">
@@ -29,17 +29,10 @@
                 <span class="preview-pill"><i></i> Frontend preview</span>
                 <a class="header-link" href="{{ route('home') }}">Sign out <span aria-hidden="true">↗</span></a>
             </div>
-        </header>
+        --}}
 @include('customer.partials.navigation')
 
         <main class="customer-booking-shell">
-            <nav class="booking-steps" aria-label="Booking progress">
-                <span class="booking-step is-active"><b>01</b><span>Service</span></span>
-                <span class="booking-step"><b>02</b><span>Schedule</span></span>
-                <span class="booking-step"><b>03</b><span>Review</span></span>
-                <span class="booking-step"><b>04</b><span>Confirmation</span></span>
-            </nav>
-
             <section class="booking-intro" aria-labelledby="booking-title">
                 <div>
                     <span class="section-kicker">Start a booking</span>
@@ -81,6 +74,13 @@
                         </label>
                     @endforeach
                 </div>
+
+                <nav class="booking-steps booking-steps-after-content" aria-label="Booking progress">
+                    <span class="booking-step is-active"><b>01</b><span>Service</span></span>
+                    <span class="booking-step"><b>02</b><span>Schedule</span></span>
+                    <span class="booking-step"><b>03</b><span>Review</span></span>
+                    <span class="booking-step"><b>04</b><span>Confirmation</span></span>
+                </nav>
 
                 <div class="booking-action-bar">
                     <p class="selection-message" data-selection-message role="status" aria-live="polite">Select a service to continue.</p>
