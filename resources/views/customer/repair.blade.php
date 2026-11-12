@@ -13,10 +13,10 @@
 @vite(['resources/css/app.css', 'resources/css/pages/customer-booking.css', 'resources/css/pages/customer-repair.css', 'resources/css/pages/customer-typography.css', 'resources/js/app.js', 'resources/js/pages/customer-repair.js'])
     </head>
     <body class="customer-booking-page customer-repair-page" data-repair-reference="{{ $booking }}">
-        <header class="customer-header">
+        {{-- Legacy header removed; the shared customer navigation is rendered below.
             <a class="brand" href="{{ route('home') }}" aria-label="Return to Pedalya home"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="10.5"></circle><circle cx="16" cy="16" r="3"></circle><path d="M16 5.5v7.5M16 19v7.5M5.5 16H13M19 16h7.5M8.6 8.6l5.3 5.3M18.1 18.1l5.3 5.3M23.4 8.6l-5.3 5.3M13.9 18.1l-5.3 5.3"></path></svg></span><span>Pedalya</span></a>
             <div class="customer-header-actions"><span class="preview-pill"><i></i> Frontend preview</span><a class="header-link" href="{{ route('home') }}">Sign out <span aria-hidden="true">↗</span></a></div>
-        </header>
+        --}}
         @include('customer.partials.navigation')
 
         <main class="customer-booking-shell">
