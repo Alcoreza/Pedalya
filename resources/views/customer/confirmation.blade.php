@@ -13,7 +13,7 @@
 @vite(['resources/css/app.css', 'resources/css/pages/customer-booking.css', 'resources/css/pages/customer-confirmation.css', 'resources/css/pages/customer-typography.css', 'resources/js/app.js', 'resources/js/pages/customer-confirmation.js'])
     </head>
     <body class="customer-booking-page customer-confirmation-page">
-        <header class="customer-header">
+        {{-- Legacy header removed; the shared customer navigation is rendered below.
             <a class="brand" href="{{ route('home') }}" aria-label="Return to Pedalya home">
                 <span class="brand-mark" aria-hidden="true">
                     <svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="10.5"></circle><circle cx="16" cy="16" r="3"></circle><path d="M16 5.5v7.5M16 19v7.5M5.5 16H13M19 16h7.5M8.6 8.6l5.3 5.3M18.1 18.1l5.3 5.3M23.4 8.6l-5.3 5.3M13.9 18.1l-5.3 5.3"></path></svg>
@@ -24,17 +24,10 @@
                 <span class="preview-pill"><i></i> Frontend preview</span>
                 <a class="header-link" href="{{ route('home') }}">Sign out <span aria-hidden="true">↗</span></a>
             </div>
-        </header>
+        --}}
 @include('customer.partials.navigation')
 
         <main class="customer-booking-shell confirmation-shell">
-            <nav class="booking-steps" aria-label="Booking progress">
-                <span class="booking-step is-complete"><b>✓</b><span>Service</span></span>
-                <span class="booking-step is-complete"><b>✓</b><span>Schedule</span></span>
-                <span class="booking-step is-complete"><b>✓</b><span>Review</span></span>
-                <span class="booking-step is-active"><b>04</b><span>Confirmation</span></span>
-            </nav>
-
             <section class="confirmation-hero" aria-labelledby="confirmation-title">
                 <div class="confirmation-mark" aria-hidden="true">✓</div>
                 <span class="section-kicker">Preview confirmation</span>
@@ -53,7 +46,20 @@
                 <div class="confirmation-status"><span class="status-dot"></span><div><strong>Payment pending</strong><p>Payment options will appear after the backend connection is available.</p></div></div>
             </section>
 
-            <div class="confirmation-actions"><a class="booking-next" href="{{ route('customer.book') }}">Start another booking <span aria-hidden="true">→</span></a><a class="confirmation-secondary" href="{{ route('home') }}">Return to home</a></div>
+            <nav class="booking-steps booking-steps-after-content" aria-label="Booking progress">
+                <span class="booking-step is-complete"><b>✓</b><span>Service</span></span>
+                <span class="booking-step is-complete"><b>✓</b><span>Schedule</span></span>
+                <span class="booking-step is-complete"><b>✓</b><span>Review</span></span>
+                <span class="booking-step is-active"><b>04</b><span>Confirmation</span></span>
+            </nav>
+
+            <div class="confirmation-actions">
+                <a class="booking-next" href="{{ route('customer.book') }}">Start another booking <span aria-hidden="true">→</span></a>
+                <a class="customer-return-link" href="{{ route('customer.dashboard') }}">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 6-6 6 6 6M4 12h16"/></svg>
+                    Return to dashboard
+                </a>
+            </div>
 
             <div class="booking-preview-note" role="note"><span aria-hidden="true">✦</span><p>This is a frontend-only preview. No booking was saved and no payment was processed.</p></div>
         </main>
