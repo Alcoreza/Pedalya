@@ -8,7 +8,7 @@
         <title>Payment | Pedalya</title>
 
         <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.googleapis.com/css?family=manrope:400,500,600,700,800" rel="stylesheet" />
+        <link href="https://fonts.bunny.net/css?family=manrope:400,500,600,700,800" rel="stylesheet" />
 
 @vite(['resources/css/app.css', 'resources/css/pages/customer-booking.css', 'resources/css/pages/customer-payment.css', 'resources/css/pages/customer-typography.css', 'resources/js/app.js', 'resources/js/pages/customer-payment.js'])
     </head>
@@ -16,6 +16,10 @@
         @include('customer.partials.navigation')
 
         <main class="customer-booking-shell payment-shell">
+            <a class="customer-return-link" href="{{ route('customer.booking.detail', $booking) }}">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 6-6 6 6 6M4 12h16"/></svg>
+                Back to booking
+            </a>
             <section class="payment-heading" aria-labelledby="payment-title"><div><span class="section-kicker">Payment details</span><h1 id="payment-title">Complete your<br><em>repair payment.</em></h1><span class="detail-reference" data-payment-reference-label>{{ $booking }}</span></div><div class="payment-status-card"><span>Current status</span><strong>Payment pending</strong></div></section>
 
             <div class="payment-layout">

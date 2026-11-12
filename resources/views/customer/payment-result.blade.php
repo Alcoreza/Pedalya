@@ -17,7 +17,7 @@
         <main class="customer-booking-shell result-shell">
             <section class="result-hero" aria-labelledby="result-title"><div class="result-mark" aria-hidden="true" data-result-mark>✓</div><span class="section-kicker" data-result-kicker>Payment received</span><h1 id="result-title" data-result-title>Your payment is<br><em>ready to go.</em></h1><p data-result-copy>Your payment preview is associated with booking <strong data-result-reference>{{ $payment }}</strong>.</p></section>
             <section class="result-card"><div class="result-reference-row"><span>Payment reference</span><strong data-result-reference>{{ $payment }}</strong></div><div class="result-status-row"><span>Payment status</span><strong data-result-status>Successful preview</strong></div><div class="result-notice" data-result-notice>In the connected system, your verified payment status will appear here.</div></section>
-            <div class="result-actions"><a class="booking-next" href="{{ route('customer.booking.detail', $payment) }}">Back to booking <span aria-hidden="true">→</span></a><a class="confirmation-secondary" href="{{ route('customer.bookings') }}">View all bookings</a></div>
+            <div class="result-actions"><a class="booking-next" href="{{ route('customer.booking.detail', $payment) }}">Back to booking <span aria-hidden="true">→</span></a><a class="confirmation-secondary" href="{{ route('customer.dashboard') }}">Return to dashboard</a></div>
             <div class="booking-preview-note" role="note"><span aria-hidden="true">✦</span><p>No payment was processed. This is a frontend result-state preview for the later PayMongo integration.</p></div>
         </main>
     </body>
