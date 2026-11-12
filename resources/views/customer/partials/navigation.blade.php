@@ -1,6 +1,5 @@
 @php
     $bookingActive = request()->routeIs('customer.bookings', 'customer.booking.detail', 'customer.repair', 'customer.payment', 'customer.payment.success', 'customer.payment.failed');
-    $bookActive = request()->routeIs('customer.book', 'customer.schedule', 'customer.review', 'customer.confirmation');
 @endphp
 
 <header class="customer-site-header">
@@ -17,14 +16,13 @@
         </a>
 
         <nav class="customer-nav" aria-label="Customer navigation">
-            <a class="{{ request()->routeIs('customer.dashboard') ? 'is-active' : '' }}" href="{{ route('customer.dashboard') }}">Dashboard</a>
-            <a class="{{ $bookingActive ? 'is-active' : '' }}" href="{{ route('customer.bookings') }}">Bookings</a>
-            <a class="{{ $bookActive ? 'is-active' : '' }}" href="{{ route('customer.book') }}">Book a repair</a>
+            <a class="{{ request()->routeIs('customer.dashboard') ? 'is-active' : '' }}" href="{{ route('customer.dashboard') }}" @if(request()->routeIs('customer.dashboard')) aria-current="page" @endif>Dashboard</a>
+            <a class="{{ $bookingActive ? 'is-active' : '' }}" href="{{ route('customer.bookings') }}" @if($bookingActive) aria-current="page" @endif>Bookings</a>
         </nav>
 
         <div class="customer-nav-actions">
-            <span class="customer-preview-pill"><i></i> Frontend preview</span>
             <a class="customer-nav-login" href="{{ route('home') }}">Sign out <span aria-hidden="true">↗</span></a>
+            <a class="customer-nav-cta" href="{{ route('customer.book') }}">Book a repair <span class="customer-nav-cta-arrow" aria-hidden="true">↗</span></a>
         </div>
     </div>
 </header>

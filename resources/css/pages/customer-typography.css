@@ -1,73 +1,180 @@
-/* Shared customer typography: clear hierarchy without overly heavy text. */
+/* Shared customer typography contract. */
 .customer-booking-page h1,
 .customer-booking-page h2,
-.customer-booking-page h3,
-.customer-booking-page .preview-pill,
-.customer-booking-page .detail-back-link,
-.customer-booking-page .booking-steps,
+.customer-booking-page h3 { font-weight: 800; }
+
+.customer-booking-page p { font-weight: 400; }
+.customer-booking-page strong { font-weight: 700; }
+
 .customer-booking-page .section-kicker,
-.customer-booking-page .service-card-top,
 .customer-booking-page .booking-next,
-.customer-booking-page .detail-reference,
-.customer-booking-page .detail-current-status span,
-.customer-booking-page .detail-card-heading span,
-.customer-booking-page .detail-summary-card dt,
-.customer-booking-page .detail-summary-card dd,
-.customer-booking-page .detail-payment-note a,
-.customer-booking-page .map-label,
-.customer-booking-page .location-details a,
-.customer-booking-page .booking-filter,
+.customer-booking-page .booking-steps,
+.customer-booking-page .service-card-top,
 .customer-booking-page .booking-reference,
-.customer-booking-page .record-status,
-.customer-booking-page .record-view-link,
-.customer-booking-page .dashboard-user,
-.customer-booking-page .dashboard-card-top > span:first-child,
-.customer-booking-page .dashboard-panel-heading > span,
-.customer-booking-page .dashboard-date small,
-.customer-booking-page .dashboard-date span,
 .customer-booking-page .dashboard-reference,
-.customer-booking-page .dashboard-card-footer a,
-.customer-booking-page .dashboard-panel-heading a,
-.customer-booking-page .dashboard-location-panel > a,
-.customer-booking-page .dashboard-mini-map span,
-.customer-booking-page .payment-status-card span,
-.customer-booking-page .payment-provider-points span,
-.customer-booking-page .payment-summary-card dd,
-.customer-booking-page .payment-back-link,
-.customer-booking-page .payment-preview-links a,
-.customer-booking-page .repair-current-status > span,
-.customer-booking-page .repair-choice-top,
-.customer-booking-page .repair-choice-status,
-.customer-booking-page .repair-choice-card a,
-.customer-booking-page .timeline-copy strong,
-.customer-booking-page .repair-visit-card dd,
-.customer-booking-page .confirmation-mark,
 .customer-booking-page .confirmation-card-head span,
-.customer-booking-page .confirmation-secondary,
 .customer-booking-page .result-mark,
-.customer-booking-page .result-actions .confirmation-secondary,
 .customer-booking-page .panel-heading > span,
 .customer-booking-page .review-field > span,
-.customer-booking-page .review-form-message,
-.customer-booking-page .summary-payment span,
-.customer-booking-page .summary-back-link,
-.customer-booking-page .selected-service-summary,
 .customer-booking-page .schedule-panel-heading > div:first-child > span,
-.customer-booking-page .date-card small,
-.customer-booking-page .time-slot {
-    font-weight: 700 !important;
-}
+.customer-booking-page .date-card small { font-weight: 700; }
 
-.customer-booking-page p,
 .customer-booking-page .booking-preview-note p,
 .customer-booking-page .selection-message,
 .customer-booking-page .location-preview-note,
-.customer-booking-page .payment-placeholder-message {
+.customer-booking-page .payment-placeholder-message { font-weight: 400; }
+
+.customer-booking-page .customer-nav a,
+.customer-booking-page .customer-nav-login { font-weight: 600; }
+
+/* Keep the dashboard on the same Manrope contract as the bookings screen. */
+.customer-dashboard-page .customer-booking-shell {
+    font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+}
+
+.customer-dashboard-page .customer-booking-shell :where(h1, h2, h3, p, span, strong, small, a, button, dt, dd) {
+    font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Match the bookings page's visible weight hierarchy on dashboard content. */
+.customer-dashboard-page .customer-booking-shell :where(
+    .dashboard-user,
+    .dashboard-card-top > span:first-child,
+    .dashboard-panel-heading > span,
+    .dashboard-date small,
+    .dashboard-date > span,
+    .dashboard-reference,
+    .dashboard-row-icon,
+    .dashboard-location-panel .dashboard-mini-map > span,
+    .activity-intro > div > span,
+    .activity-intro > a,
+    .dashboard-booking-reference
+) {
+    font-weight: 700;
+}
+
+.customer-dashboard-page .customer-booking-shell :where(
+    .dashboard-welcome p,
+    .dashboard-appointment p,
+    .dashboard-progress-card p,
+    .dashboard-location-panel > p,
+    .dashboard-booking-meta
+) {
     font-weight: 400;
 }
 
-/* Keep the shared customer navigation aligned with the landing navbar. */
-.customer-booking-page .customer-nav a,
-.customer-booking-page .header-link {
-    font-weight: 600 !important;
+/* Booking progress sits below the main content and keeps completed phases visible. */
+.customer-booking-page .booking-steps-after-content {
+    justify-content: center;
+    margin-top: 2.3rem;
+    margin-bottom: 0;
+    padding: .8rem 1rem;
+    border-top: 1px solid var(--color-line);
+    border-bottom: 1px solid var(--color-line);
+}
+
+.customer-booking-page .booking-step.is-complete {
+    color: var(--color-brand);
+}
+
+.customer-booking-page .booking-step.is-complete b {
+    border-color: var(--color-brand);
+    color: var(--color-brand);
+    background: var(--color-accent-soft);
+}
+
+/* Status text is intentionally medium-weight on list/detail cards. */
+.customer-booking-page .record-status,
+.customer-booking-page .booking-status-item .record-status { font-weight: 700; }
+
+/* Customer-wide visual refinement. Keep the page family coordinated while
+   allowing dashboard, booking, payment, and repair screens to retain their
+   own content hierarchy. */
+.customer-booking-page .customer-booking-shell {
+    animation: customer-page-enter 520ms var(--ease-out) both;
+}
+
+.customer-booking-page:not(.customer-dashboard-page):not(.customer-bookings-page) :where(.booking-intro, .detail-heading, .payment-heading, .repair-heading, .repairs-heading) {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    margin-bottom: 2rem;
+    padding: 1.55rem 1.75rem 1.45rem;
+    border: 1px solid rgba(31, 100, 84, .12);
+    border-radius: 0 1.6rem 0 1.6rem;
+    background:
+        radial-gradient(circle at 88% 22%, rgba(201, 240, 108, .28), transparent 19%),
+        linear-gradient(120deg, rgba(255,255,255,.82), rgba(236, 248, 222, .58));
+    box-shadow: 0 .9rem 2.4rem rgba(31, 71, 57, .06);
+}
+
+.customer-booking-page:not(.customer-dashboard-page):not(.customer-bookings-page) :where(.booking-intro, .detail-heading, .payment-heading, .repair-heading, .repairs-heading)::before {
+    position: absolute;
+    right: 7%;
+    bottom: -5rem;
+    z-index: -1;
+    width: 12rem;
+    height: 12rem;
+    border: 1px solid rgba(31, 100, 84, .11);
+    border-radius: 50%;
+    content: '';
+    box-shadow: 0 0 0 1.4rem rgba(31, 100, 84, .03), 0 0 0 2.8rem rgba(31, 100, 84, .018);
+}
+
+.customer-booking-page:not(.customer-dashboard-page):not(.customer-bookings-page) :where(.booking-intro h1, .detail-heading h1, .payment-heading h1, .repair-heading h1, .repairs-heading h1) {
+    position: relative;
+    z-index: 1;
+}
+
+.customer-booking-page :where(.service-card, .booking-record, .detail-card:not(.manager-message), .repair-choice-card, .repair-timeline-card, .repair-visit-card, .payment-card, .confirmation-card, .result-card, .schedule-panel, .review-form-panel, .booking-summary-card) {
+    border-color: rgba(31, 100, 84, .13);
+    box-shadow: 0 .7rem 1.8rem rgba(31, 71, 57, .055);
+    transition: border-color 220ms ease, box-shadow 220ms ease, background-color 220ms ease;
+}
+
+.customer-booking-page :where(.service-card, .booking-record, .detail-card:not(.manager-message), .repair-choice-card, .repair-timeline-card, .repair-visit-card, .payment-card, .confirmation-card, .result-card, .schedule-panel, .review-form-panel, .booking-summary-card):hover {
+    border-color: rgba(31, 100, 84, .25);
+    box-shadow: 0 .9rem 2rem rgba(31, 71, 57, .09);
+}
+
+.customer-booking-page :where(a, button, input, textarea):focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: .2rem;
+}
+
+.customer-booking-page :where(.date-card, .time-slot, .booking-filter) {
+    -webkit-tap-highlight-color: transparent;
+}
+
+.customer-booking-page :where(.confirmation-mark, .result-mark, .payment-provider-mark, .repair-bike-icon, .appointment-icon) {
+    animation: customer-mark-enter 600ms var(--ease-out) 120ms both;
+}
+
+@keyframes customer-page-enter {
+    from { opacity: 0; transform: translateY(.7rem); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes customer-mark-enter {
+    from { opacity: 0; transform: translateY(.45rem) scale(.88); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (max-width: 620px) {
+    .customer-booking-page .booking-steps-after-content {
+        justify-content: flex-start;
+        padding-inline: .25rem;
+    }
+
+    .customer-booking-page:not(.customer-dashboard-page):not(.customer-bookings-page) :where(.booking-intro, .detail-heading, .payment-heading, .repair-heading, .repairs-heading) {
+        padding: 1.25rem 1.15rem;
+        border-radius: 0 1.2rem 0 1.2rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .customer-booking-page .customer-booking-shell,
+    .customer-booking-page :where(.confirmation-mark, .result-mark, .payment-provider-mark, .repair-bike-icon, .appointment-icon) {
+        animation: none;
+    }
 }
