@@ -13,7 +13,7 @@
 @vite(['resources/css/app.css', 'resources/css/pages/customer-booking.css', 'resources/css/pages/customer-review.css', 'resources/css/pages/customer-typography.css', 'resources/js/app.js', 'resources/js/pages/customer-review.js'])
     </head>
     <body class="customer-booking-page customer-review-page">
-        <header class="customer-header">
+        {{-- Legacy header removed; the shared customer navigation is rendered below.
             <a class="brand" href="{{ route('home') }}" aria-label="Return to Pedalya home">
                 <span class="brand-mark" aria-hidden="true">
                     <svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="10.5"></circle><circle cx="16" cy="16" r="3"></circle><path d="M16 5.5v7.5M16 19v7.5M5.5 16H13M19 16h7.5M8.6 8.6l5.3 5.3M18.1 18.1l5.3 5.3M23.4 8.6l-5.3 5.3M13.9 18.1l-5.3 5.3"></path></svg>
@@ -24,17 +24,10 @@
                 <span class="preview-pill"><i></i> Frontend preview</span>
                 <a class="header-link" href="{{ route('home') }}">Sign out <span aria-hidden="true">↗</span></a>
             </div>
-        </header>
+        --}}
 @include('customer.partials.navigation')
 
         <main class="customer-booking-shell">
-            <nav class="booking-steps" aria-label="Booking progress">
-                <a class="booking-step is-complete" href="{{ route('customer.book') }}"><b>✓</b><span>Service</span></a>
-                <a class="booking-step is-complete" href="{{ route('customer.schedule') }}"><b>✓</b><span>Schedule</span></a>
-                <span class="booking-step is-active"><b>03</b><span>Review</span></span>
-                <span class="booking-step"><b>04</b><span>Confirmation</span></span>
-            </nav>
-
             <section class="booking-intro review-intro" aria-labelledby="review-title">
                 <div>
                     <span class="section-kicker">Almost there</span>
@@ -68,9 +61,19 @@
                     </dl>
                     <div class="summary-payment"><span>Payment status</span><strong>Pending</strong><small>Payment options will be connected later.</small></div>
                     <button class="booking-next review-submit" type="submit">Continue to confirmation <span aria-hidden="true">→</span></button>
-                    <a class="summary-back-link" href="{{ route('customer.schedule') }}">← Change schedule</a>
+                    <a class="customer-return-link" href="{{ route('customer.schedule') }}">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 6-6 6 6 6M4 12h16"/></svg>
+                        Change schedule
+                    </a>
                 </aside>
             </form>
+
+            <nav class="booking-steps booking-steps-after-content" aria-label="Booking progress">
+                <a class="booking-step is-complete" href="{{ route('customer.book') }}"><b>✓</b><span>Service</span></a>
+                <a class="booking-step is-complete" href="{{ route('customer.schedule') }}"><b>✓</b><span>Schedule</span></a>
+                <span class="booking-step is-active"><b>03</b><span>Review</span></span>
+                <span class="booking-step"><b>04</b><span>Confirmation</span></span>
+            </nav>
 
             <div class="booking-preview-note" role="note"><span aria-hidden="true">✦</span><p>This review is a frontend preview. It will not create a booking until the backend phase is connected.</p></div>
         </main>
