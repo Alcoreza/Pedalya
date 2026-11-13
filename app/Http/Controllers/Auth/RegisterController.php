@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class RegisterController extends Controller
 {
@@ -26,9 +25,8 @@ class RegisterController extends Controller
             'password' => $validated['password'],
         ]);
 
-        Auth::login($user);
-        $request->session()->regenerate();
-
-        return redirect()->route('customer.dashboard');
+        return redirect()
+            ->route('login')
+            ->with('status', 'Your account was created. Please log in.');
     }
 }
