@@ -76,7 +76,7 @@
                     </div>
                 @endif
 
-                <form class="register-form" method="POST" action="{{ url('/register') }}" data-register-preview novalidate>
+                <form class="register-form" method="POST" action="{{ route('register.store') }}" data-register-form novalidate>
                     @csrf
 
                     <div class="register-fields-two">
@@ -92,10 +92,10 @@
                         <div class="register-field">
                             <label for="phone">Mobile number</label>
                             <div class="register-input">
-                                <input id="phone" name="phone" type="tel" value="{{ old('phone') }}" placeholder="09XX XXX XXXX" autocomplete="tel" inputmode="tel" required>
+                                <input id="phone" name="mobile_number" type="tel" value="{{ old('mobile_number') }}" placeholder="09XX XXX XXXX" autocomplete="tel" inputmode="tel" required>
                                 <span aria-hidden="true">+63</span>
                             </div>
-                            <small class="register-error" data-error-for="phone"></small>
+                            <small class="register-error" data-error-for="mobile_number"></small>
                         </div>
                     </div>
 
@@ -137,10 +137,6 @@
                         <span>Create account</span>
                         <i aria-hidden="true">↗</i>
                     </button>
-
-                    <div class="register-preview-notice" role="status" aria-live="polite" data-register-notice hidden>
-                        The registration interface is ready. Account creation will work after the authentication backend is connected.
-                    </div>
                 </form>
             </section>
         </main>

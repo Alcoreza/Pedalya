@@ -1,4 +1,4 @@
-const registerForm = document.querySelector('[data-register-preview]');
+const registerForm = document.querySelector('[data-register-form]');
 
 document.querySelectorAll('[data-register-password-toggle]').forEach((toggle) => {
     const input = document.getElementById(toggle.dataset.registerPasswordToggle);
@@ -13,7 +13,6 @@ document.querySelectorAll('[data-register-password-toggle]').forEach((toggle) =>
 });
 
 if (registerForm) {
-    const notice = registerForm.querySelector('[data-register-notice]');
     const fields = [...registerForm.querySelectorAll('input[required]')];
     const password = registerForm.querySelector('[data-register-password]');
     const confirmation = registerForm.querySelector('#password_confirmation');
@@ -64,16 +63,10 @@ if (registerForm) {
         const results = fields.map(setFieldError);
         const isValid = results.every(Boolean);
 
-        event.preventDefault();
-
         if (!isValid) {
+            event.preventDefault();
             fields[results.findIndex((result) => !result)]?.focus();
             return;
-        }
-
-        if (notice) {
-            notice.hidden = false;
-            requestAnimationFrame(() => notice.classList.add('is-visible'));
         }
     });
 }

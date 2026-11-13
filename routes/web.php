@@ -5,6 +5,7 @@ use App\Http\Controllers\Manager\BookingsController;
 use App\Http\Controllers\Manager\DashboardController;
 use App\Http\Controllers\Manager\RepairsController;
 use App\Http\Controllers\Manager\ScheduleController;
+use App\Http\Controllers\Auth\RegisterController;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
@@ -12,6 +13,7 @@ Route::view('/', 'welcome')->name('home');
 Route::view('/login', 'auth.login')->name('login');
 
 Route::view('/register', 'auth.register')->name('register');
+Route::post('/register', [RegisterController::class, 'store'])->name('register.store');
 
 Route::view('/book', 'customer.book')->name('customer.book');
 Route::view('/book/schedule', 'customer.schedule')->name('customer.schedule');
