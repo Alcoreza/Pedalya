@@ -4,6 +4,33 @@ const customerPage = document.querySelector('.customer-booking-page');
 
 if (customerPage) {
     customerPage.classList.add('customer-motion-ready');
+    const menuToggle = customerPage.querySelector('.customer-menu-toggle');
+    const customerNav = customerPage.querySelector('.customer-nav');
+
+    const closeCustomerMenu = () => {
+        if (!menuToggle || !customerNav) return;
+        menuToggle.setAttribute('aria-expanded', 'false');
+        customerNav.classList.remove('is-open');
+        customerPage.classList.remove('customer-menu-open');
+    };
+
+    menuToggle?.addEventListener('click', () => {
+        const isOpen = menuToggle.getAttribute('aria-expanded') === 'true';
+        menuToggle.setAttribute('aria-expanded', String(!isOpen));
+        customerNav?.classList.toggle('is-open', !isOpen);
+        customerPage.classList.toggle('customer-menu-open', !isOpen);
+    });
+
+    customerNav?.querySelectorAll('a').forEach((link) => link.addEventListener('click', closeCustomerMenu));
+    window.addEventListener('resize', () => {
+        if (window.innerWidth > 820) closeCustomerMenu();
+    });
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && menuToggle?.getAttribute('aria-expanded') === 'true') {
+            closeCustomerMenu();
+            menuToggle.focus();
+        }
+    });
 
     const revealItems = [...customerPage.querySelectorAll('main > *')];
     const nestedRevealItems = [...customerPage.querySelectorAll([
