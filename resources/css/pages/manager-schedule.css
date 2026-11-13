@@ -72,8 +72,9 @@
 .week-control > div strong { font-size: 0.78rem; letter-spacing: -0.03em; }
 .week-control nav { display: flex; align-items: center; gap: 0.35rem; }
 .week-control nav a { display: grid; min-width: 2.25rem; height: 2.25rem; place-items: center; border: 1px solid var(--color-line); border-radius: 50%; color: var(--color-ink); font-size: 0.7rem; font-weight: 800; text-decoration: none; transition: transform 180ms ease, background-color 180ms ease; }
-.week-control nav a:hover { transform: translateY(-2px); background: white; }
+.week-control nav a:hover { transform: translateY(-2px); background: white; box-shadow: 0 8px 18px rgba(12, 40, 34, 0.09); }
 .week-control nav .today-link { width: auto; padding-inline: 0.75rem; border-radius: 999px; background: var(--color-brand-deep); color: white; font-size: 0.54rem; }
+.week-control nav .today-link:hover { border-color: var(--color-brand); background: var(--color-brand); color: white; box-shadow: 0 10px 22px rgba(12, 40, 34, 0.22); }
 
 .schedule-summary {
     display: grid;
@@ -188,13 +189,16 @@
 .calendar-contract:last-child { margin-bottom: 1.25rem; }
 
 .sync-action { margin-top: 1rem; padding: 1rem 1.25rem 1.25rem; background: var(--color-brand-deep); }
-.sync-action button { display: flex; width: 100%; min-height: 2.8rem; align-items: center; justify-content: space-between; padding-inline: 0.9rem; cursor: pointer; border: 0; border-radius: 0.65rem; background: var(--color-accent); color: var(--color-brand-deep); font: inherit; font-size: 0.54rem; font-weight: 800; }
+.sync-action button { display: flex; width: 100%; min-height: 2.8rem; align-items: center; justify-content: space-between; padding-inline: 0.9rem; cursor: pointer; border: 0; border-radius: 0.65rem; background: var(--color-accent); color: var(--color-brand-deep); font: inherit; font-size: 0.54rem; font-weight: 800; transition: transform 220ms var(--ease-out), background-color 180ms ease, box-shadow 220ms ease; }
+.sync-action button span { transition: transform 320ms var(--ease-out); }
+.sync-action button:hover { transform: translateY(-2px); background: #d4f985; box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2); }
+.sync-action button:hover span { transform: rotate(180deg); }
 .sync-action p { margin: 0.6rem 0 0; color: rgba(255, 255, 255, 0.48); font-size: 0.43rem; line-height: 1.55; }
-.sync-action:last-child { margin-bottom: 1.25rem; border-radius: 0 0 1.2rem 0.3rem; }
+.sync-action:last-child { margin-bottom: 0; border-radius: 0; }
 .sync-exhausted { display: grid; gap: 0.2rem; margin-top: 1rem; padding: 1rem 1.25rem; background: #fff0ed; }
 .sync-exhausted strong { color: var(--color-danger); font-size: 0.56rem; }
 .sync-exhausted span { color: var(--color-muted); font-size: 0.45rem; }
-.sync-exhausted:last-child { margin-bottom: 1.25rem; border-radius: 0 0 1.2rem 0.3rem; }
+.sync-exhausted:last-child { margin-bottom: 0; border-radius: 0; }
 
 .schedule-enter { animation: schedule-enter 750ms var(--ease-out) both; animation-delay: var(--enter-delay, 0ms); }
 @keyframes schedule-enter { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
@@ -253,3 +257,37 @@
 @media (prefers-reduced-motion: reduce) {
     .schedule-enter { opacity: 1; transform: none; animation: none; }
 }
+
+/* Readability pass for calendar scanning and appointment details. */
+body.manager-schedule-page .schedule-summary span { font-size: 0.62rem; }
+body.manager-schedule-page .week-control > div span,
+body.manager-schedule-page .sync-legend,
+body.manager-schedule-page .day-column > header span,
+body.manager-schedule-page .slot-heading time,
+body.manager-schedule-page .schedule-facts dt,
+body.manager-schedule-page .appointment-date > div span { font-size: 0.58rem; }
+body.manager-schedule-page .week-control nav .today-link,
+body.manager-schedule-page .sync-action button { font-size: 0.62rem; }
+body.manager-schedule-page .appointment-card strong { font-size: 0.68rem; }
+body.manager-schedule-page .appointment-card small,
+body.manager-schedule-page .detail-title p,
+body.manager-schedule-page .customer-contact a,
+body.manager-schedule-page .calendar-contract small,
+body.manager-schedule-page .sync-action p,
+body.manager-schedule-page .sync-exhausted span { font-size: 0.62rem; }
+body.manager-schedule-page .schedule-facts dd,
+body.manager-schedule-page .customer-contact strong,
+body.manager-schedule-page .calendar-contract strong,
+body.manager-schedule-page .sync-exhausted strong { font-size: 0.64rem; }
+body.manager-schedule-page :is(.appointment-card, .week-control a, .sync-action button):focus-visible { outline: 3px solid rgba(31, 100, 84, 0.24); outline-offset: 2px; }
+
+/* Interaction polish for high-frequency calendar scanning. */
+.schedule-summary article { transition: transform 220ms var(--ease-out), background-color 180ms ease, box-shadow 220ms ease; }
+.schedule-summary article:hover { transform: translateY(-3px); background: rgba(255, 255, 255, 0.62); box-shadow: 0 12px 28px rgba(12, 40, 34, 0.06); }
+.schedule-summary .summary-follow-up:hover { background: var(--color-brand); box-shadow: 0 15px 30px rgba(12, 40, 34, 0.2); }
+.schedule-summary .summary-follow-up:hover span { color: rgba(255, 255, 255, 0.76); }
+.schedule-summary .summary-follow-up:hover strong { color: var(--color-accent); }
+.appointment-card:hover strong { color: var(--color-brand); }
+.appointment-card strong { transition: color 180ms ease; }
+.customer-contact > span { transition: transform 220ms var(--ease-out), background-color 180ms ease; }
+.customer-contact:hover > span { transform: scale(1.06); background: #dfe9e2; }

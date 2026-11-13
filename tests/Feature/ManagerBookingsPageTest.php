@@ -18,9 +18,18 @@ class ManagerBookingsPageTest extends TestCase
             ->assertSee('Schedule review')
             ->assertSee('Requested time window')
             ->assertSee('Bookings within this timeframe')
+            ->assertSee('Customer problem details')
+            ->assertSee('front brake squeals')
             ->assertDontSee('Slot capacity')
             ->assertSee('PDL-1047')
             ->assertSee('PDL-1046');
+    }
+
+    public function test_manager_can_search_booking_problem_details(): void
+    {
+        $this->get(route('manager.bookings.index', ['search' => 'downhill']))
+            ->assertOk()
+            ->assertSee('PDL-1048');
     }
 
     public function test_manager_can_resolve_a_schedule_review(): void

@@ -19,7 +19,17 @@ class ManagerRepairsPageTest extends TestCase
             ->assertSee('Active repairs')
             ->assertSee('Completed records')
             ->assertSee('Audit trail')
+            ->assertSee('Customer problem details')
+            ->assertSee('unstable during sharp turns')
             ->assertDontSee('%');
+    }
+
+    public function test_manager_can_search_repair_problem_details(): void
+    {
+        $this->get(route('manager.repairs.index', ['search' => 'pothole']))
+            ->assertOk()
+            ->assertSee('PDL-1051')
+            ->assertDontSee('PDL-1052');
     }
 
     public function test_manager_can_move_a_paid_repair_through_the_full_workshop_lifecycle(): void

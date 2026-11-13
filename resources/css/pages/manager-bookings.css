@@ -316,6 +316,17 @@
 .detail-facts dt { color: var(--color-muted); font-size: 0.46rem; }
 .detail-facts dd { margin: 0; font-size: 0.58rem; font-weight: 700; }
 
+.customer-notes { margin: 0 1.35rem 1rem; overflow: hidden; border: 1px solid rgba(31, 100, 84, 0.14); border-radius: 0.8rem; background: rgba(255, 255, 255, 0.58); transition: border-color 180ms ease, background-color 180ms ease, box-shadow 220ms ease; }
+.customer-notes:hover { border-color: rgba(31, 100, 84, 0.28); background: white; box-shadow: 0 10px 26px rgba(12, 40, 34, 0.06); }
+.customer-notes summary { display: flex; min-height: 3rem; align-items: center; justify-content: space-between; gap: 1rem; padding: 0 0.9rem; cursor: pointer; color: var(--color-brand); font-size: 0.58rem; font-weight: 800; list-style: none; }
+.customer-notes summary::-webkit-details-marker { display: none; }
+.customer-notes summary svg { width: 1rem; flex: 0 0 auto; fill: none; stroke: currentColor; stroke-width: 1.8; transition: transform 240ms var(--ease-out); }
+.customer-notes[open] summary svg { transform: rotate(180deg); }
+.customer-notes-body { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows 280ms var(--ease-out), opacity 220ms ease; }
+.customer-notes[open] .customer-notes-body { grid-template-rows: 1fr; opacity: 1; }
+.customer-notes-body p { min-height: 0; margin: 0; overflow: hidden; padding: 0 0.9rem 0.9rem; color: var(--color-ink-soft); font-size: 0.64rem; line-height: 1.7; }
+.customer-notes summary:focus-visible { outline: 3px solid rgba(31, 100, 84, 0.2); outline-offset: -3px; }
+
 .status-matrix { display: grid; grid-template-columns: 1fr 1fr; margin: 0 1.35rem; border-top: 1px solid var(--color-line); border-left: 1px solid var(--color-line); }
 .status-matrix > div { display: grid; min-height: 4.2rem; align-content: center; gap: 0.3rem; padding: 0.7rem; border-right: 1px solid var(--color-line); border-bottom: 1px solid var(--color-line); }
 .status-matrix span { color: var(--color-muted); font-size: 0.44rem; }
@@ -437,7 +448,7 @@
     .booking-filters > button { align-self: stretch; }
     .bookings-workspace { grid-template-columns: 1fr; }
     .booking-detail { position: static; display: grid; grid-template-columns: 1fr 1fr; }
-    .detail-accent, .detail-heading, .capacity-review, .processing-note, .decision-panel { grid-column: 1 / -1; }
+    .detail-accent, .detail-heading, .customer-notes, .capacity-review, .processing-note, .decision-panel { grid-column: 1 / -1; }
     .detail-customer { margin-bottom: 1rem; }
     .status-matrix { align-self: start; margin-top: 1.35rem; }
     .integration-note { align-self: end; }
@@ -456,7 +467,7 @@
     .booking-row time { display: none; }
     .booking-row .queue-payment { display: none; }
     .booking-detail { grid-template-columns: 1fr; }
-    .detail-accent, .detail-heading, .capacity-review, .processing-note, .decision-panel { grid-column: auto; }
+    .detail-accent, .detail-heading, .customer-notes, .capacity-review, .processing-note, .decision-panel { grid-column: auto; }
     .status-matrix { margin-top: 0; }
 }
 
@@ -483,4 +494,49 @@
 @media (prefers-reduced-motion: reduce) {
     .bookings-enter { opacity: 1; transform: none; animation: none; }
     .sync-loader { animation: none; }
+    .customer-notes, .customer-notes summary svg, .customer-notes-body { transition: none; }
 }
+
+/* Readability pass: keep compact hierarchy without sub-10px operational text. */
+body.manager-bookings-page .booking-summary article span { font-size: 0.64rem; }
+body.manager-bookings-page .booking-filters label > span,
+body.manager-bookings-page .queue-labels,
+body.manager-bookings-page .detail-facts dt,
+body.manager-bookings-page .status-matrix span { font-size: 0.58rem; }
+body.manager-bookings-page .filter-search input,
+body.manager-bookings-page .booking-filters select,
+body.manager-bookings-page .booking-filters > button { font-size: 0.64rem; }
+body.manager-bookings-page .queue-customer strong,
+body.manager-bookings-page .booking-row time strong { font-size: 0.68rem; }
+body.manager-bookings-page .queue-customer small,
+body.manager-bookings-page .booking-row time small,
+body.manager-bookings-page .overlap-list small,
+body.manager-bookings-page .overlap-list time { font-size: 0.6rem; }
+body.manager-bookings-page .state-chip { font-size: 0.6rem; }
+body.manager-bookings-page .detail-customer a { font-size: 0.62rem; }
+body.manager-bookings-page .detail-facts dd,
+body.manager-bookings-page .status-matrix strong { font-size: 0.64rem; }
+body.manager-bookings-page .overlap-list strong,
+body.manager-bookings-page .processing-note strong,
+body.manager-bookings-page .integration-note strong { font-size: 0.62rem; }
+body.manager-bookings-page .integration-note span,
+body.manager-bookings-page .decision-panel p { font-size: 0.62rem; }
+body.manager-bookings-page .decision-panel button,
+body.manager-bookings-page .dialog-actions button { font-size: 0.62rem; }
+body.manager-bookings-page :is(.booking-row, .booking-filters button, .booking-filters a, .decision-panel button):focus-visible { outline: 3px solid rgba(31, 100, 84, 0.24); outline-offset: 2px; }
+
+/* Interaction polish: responsive controls without adding visual noise. */
+.booking-summary article { transition: transform 220ms var(--ease-out), background-color 180ms ease, box-shadow 220ms ease; }
+.booking-summary article:hover { transform: translateY(-3px); background: rgba(255, 255, 255, 0.62); box-shadow: 0 12px 28px rgba(12, 40, 34, 0.06); }
+.booking-summary .summary-primary:hover { background: var(--color-brand); box-shadow: 0 15px 30px rgba(12, 40, 34, 0.2); }
+.booking-summary .summary-primary:hover span { color: rgba(255, 255, 255, 0.76); }
+.booking-summary .summary-primary:hover strong { color: var(--color-accent); }
+.booking-filters > button:hover { transform: translateY(-2px); background: var(--color-brand-deep); box-shadow: 0 11px 22px rgba(12, 40, 34, 0.18); }
+.booking-filters > button:hover span { transform: translateX(3px); }
+.booking-filters > button span { display: inline-block; transition: transform 220ms var(--ease-out); }
+.booking-row { transition: transform 220ms var(--ease-out), background-color 180ms ease, box-shadow 220ms ease; }
+.booking-row:hover { transform: translateX(3px); box-shadow: 0 10px 24px rgba(12, 40, 34, 0.05); }
+.decision-panel button:hover,
+.dialog-actions button:hover { transform: translateY(-2px); box-shadow: 0 10px 22px rgba(12, 40, 34, 0.12); }
+.decision-panel button:active,
+.dialog-actions button:active { transform: translateY(0) scale(0.98); }

@@ -62,6 +62,7 @@ class RepairsController extends Controller
                         $repair['reference'],
                         $repair['customer']['name'],
                         $repair['service'],
+                        $repair['notes'] ?? '',
                         $repair['repair_status']['label'],
                     ])),
                     $search,
@@ -208,22 +209,23 @@ class RepairsController extends Controller
     private function repairRecords(): Collection
     {
         return collect([
-            $this->record('PDL-1052', 'Ana Reyes', 'AR', 'ana.reyes@example.com', '+63 917 000 1052', 'Safety inspection', now()->setTime(15, 0), 'successful', 'awaiting_arrival'),
-            $this->record('PDL-1042', 'Paolo Tan', 'PT', 'paolo.tan@example.com', '+63 917 000 1042', 'Brake inspection', now()->setTime(11, 30), 'pending', 'at_shop', ['arrived_at' => now()->setTime(10, 45), 'arrived_by' => 'Elmer Daniel']),
-            $this->record('PDL-1051', 'Nico Santos', 'NS', 'nico.santos@example.com', '+63 917 000 1051', 'Wheel alignment', now()->setTime(13, 30), 'successful', 'at_shop', ['arrived_at' => now()->setTime(12, 50), 'arrived_by' => 'Elmer Daniel']),
-            $this->record('PDL-1041', 'Lia Mendoza', 'LM', 'lia.mendoza@example.com', '+63 917 000 1041', 'General tune-up', now()->setTime(9, 0), 'successful', 'in_progress', ['arrived_at' => now()->setTime(8, 42), 'arrived_by' => 'Elmer Daniel', 'started_at' => now()->setTime(9, 10), 'started_by' => 'Elmer Daniel']),
-            $this->record('PDL-1038', 'Rafi Gomez', 'RG', 'rafi.gomez@example.com', '+63 917 000 1038', 'Drivetrain repair', now()->subDay()->setTime(14, 0), 'successful', 'in_progress', ['arrived_at' => now()->subDay()->setTime(13, 35), 'arrived_by' => 'Elmer Daniel', 'started_at' => now()->subDay()->setTime(14, 15), 'started_by' => 'Elmer Daniel']),
-            $this->record('PDL-1039', 'Mia Flores', 'MF', 'mia.flores@example.com', '+63 917 000 1039', 'General tune-up', now()->subDays(2)->setTime(11, 0), 'successful', 'completed', ['arrived_at' => now()->subDays(2)->setTime(10, 40), 'arrived_by' => 'Elmer Daniel', 'started_at' => now()->subDays(2)->setTime(11, 10), 'started_by' => 'Elmer Daniel', 'completed_at' => now()->setTime(10, 5), 'completed_by' => 'Elmer Daniel']),
-            $this->record('PDL-1037', 'Noah Ramos', 'NR', 'noah.ramos@example.com', '+63 917 000 1037', 'Brake inspection', now()->subDays(4)->setTime(10, 30), 'successful', 'claimed', ['arrived_at' => now()->subDays(4)->setTime(10, 5), 'arrived_by' => 'Elmer Daniel', 'started_at' => now()->subDays(4)->setTime(10, 40), 'started_by' => 'Elmer Daniel', 'completed_at' => now()->subDays(3)->setTime(15, 20), 'completed_by' => 'Elmer Daniel', 'claimed_at' => now()->subDays(2)->setTime(9, 15), 'claimed_by' => 'Elmer Daniel']),
+            $this->record('PDL-1052', 'Ana Reyes', 'AR', 'ana.reyes@example.com', '+63 917 000 1052', 'Safety inspection', 'The bike feels unstable during sharp turns and the front brake lever feels loose.', now()->setTime(15, 0), 'successful', 'awaiting_arrival'),
+            $this->record('PDL-1042', 'Paolo Tan', 'PT', 'paolo.tan@example.com', '+63 917 000 1042', 'Brake inspection', 'The rear brake makes a grinding sound and takes longer than usual to stop.', now()->setTime(11, 30), 'pending', 'at_shop', ['arrived_at' => now()->setTime(10, 45), 'arrived_by' => 'Elmer Daniel']),
+            $this->record('PDL-1051', 'Nico Santos', 'NS', 'nico.santos@example.com', '+63 917 000 1051', 'Wheel alignment', 'The front wheel pulls to the left after hitting a pothole.', now()->setTime(13, 30), 'successful', 'at_shop', ['arrived_at' => now()->setTime(12, 50), 'arrived_by' => 'Elmer Daniel']),
+            $this->record('PDL-1041', 'Lia Mendoza', 'LM', 'lia.mendoza@example.com', '+63 917 000 1041', 'General tune-up', 'The chain slips while climbing and there is a clicking sound near the crank.', now()->setTime(9, 0), 'successful', 'in_progress', ['arrived_at' => now()->setTime(8, 42), 'arrived_by' => 'Elmer Daniel', 'started_at' => now()->setTime(9, 10), 'started_by' => 'Elmer Daniel']),
+            $this->record('PDL-1038', 'Rafi Gomez', 'RG', 'rafi.gomez@example.com', '+63 917 000 1038', 'Drivetrain repair', 'Pedaling becomes rough in higher gears and the chain occasionally drops.', now()->subDay()->setTime(14, 0), 'successful', 'in_progress', ['arrived_at' => now()->subDay()->setTime(13, 35), 'arrived_by' => 'Elmer Daniel', 'started_at' => now()->subDay()->setTime(14, 15), 'started_by' => 'Elmer Daniel']),
+            $this->record('PDL-1039', 'Mia Flores', 'MF', 'mia.flores@example.com', '+63 917 000 1039', 'General tune-up', 'Please check the loose crank and the clicking sound near the pedals.', now()->subDays(2)->setTime(11, 0), 'successful', 'completed', ['arrived_at' => now()->subDays(2)->setTime(10, 40), 'arrived_by' => 'Elmer Daniel', 'started_at' => now()->subDays(2)->setTime(11, 10), 'started_by' => 'Elmer Daniel', 'completed_at' => now()->setTime(10, 5), 'completed_by' => 'Elmer Daniel']),
+            $this->record('PDL-1037', 'Noah Ramos', 'NR', 'noah.ramos@example.com', '+63 917 000 1037', 'Brake inspection', null, now()->subDays(4)->setTime(10, 30), 'successful', 'claimed', ['arrived_at' => now()->subDays(4)->setTime(10, 5), 'arrived_by' => 'Elmer Daniel', 'started_at' => now()->subDays(4)->setTime(10, 40), 'started_by' => 'Elmer Daniel', 'completed_at' => now()->subDays(3)->setTime(15, 20), 'completed_by' => 'Elmer Daniel', 'claimed_at' => now()->subDays(2)->setTime(9, 15), 'claimed_by' => 'Elmer Daniel']),
         ]);
     }
 
-    private function record(string $reference, string $name, string $initials, string $email, string $phone, string $service, mixed $appointmentAt, string $paymentStatus, string $repairStatus, array $events = []): array
+    private function record(string $reference, string $name, string $initials, string $email, string $phone, string $service, ?string $notes, mixed $appointmentAt, string $paymentStatus, string $repairStatus, array $events = []): array
     {
         return array_replace([
             'reference' => $reference,
             'customer' => compact('name', 'initials', 'email', 'phone'),
             'service' => $service,
+            'notes' => $notes,
             'appointment_at' => $appointmentAt,
             'booking_status' => ['key' => 'confirmed', 'label' => 'Confirmed'],
             'payment_status' => ['key' => $paymentStatus, 'label' => Str::headline($paymentStatus)],

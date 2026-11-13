@@ -197,7 +197,6 @@
                                 <span>Current view</span>
                                 <h2 id="booking-queue-title">{{ $bookings->count() }} {{ Str::plural('booking', $bookings->count()) }}</h2>
                             </div>
-                            <small>Newest first</small>
                         </div>
 
                         <div class="queue-labels" aria-hidden="true">
@@ -258,6 +257,16 @@
                                 <div><dt>Submitted</dt><dd>{{ $selectedBooking['submitted_at']->diffForHumans() }}</dd></div>
                             </dl>
 
+                            <details class="customer-notes">
+                                <summary>
+                                    <span>Customer problem details</span>
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"></path></svg>
+                                </summary>
+                                <div class="customer-notes-body">
+                                    <p>{{ filled($selectedBooking['notes'] ?? null) ? $selectedBooking['notes'] : 'No additional details were provided for this booking.' }}</p>
+                                </div>
+                            </details>
+
                             <div class="status-matrix">
                                 <div><span>Booking</span><strong class="status-text text-{{ $selectedBooking['booking_status']['key'] }}">{{ $selectedBooking['booking_status']['label'] }}</strong></div>
                                 <div><span>Processing</span><strong class="status-text process-text-{{ $selectedBooking['processing_method']['key'] }}">{{ $selectedBooking['processing_method']['label'] }}</strong></div>
@@ -290,12 +299,12 @@
                             @elseif ($selectedBooking['processing_method']['key'] === 'automatic')
                                 <div class="processing-note processing-automatic">
                                     <span aria-hidden="true">✓</span>
-                                    <p><strong>Confirmed automatically</strong><small>Capacity was available when this request was registered.</small></p>
+                                    <strong>Confirmed automatically</strong>
                                 </div>
                             @elseif ($selectedBooking['processing_method']['key'] === 'manual')
                                 <div class="processing-note processing-manual">
                                     <span aria-hidden="true">↗</span>
-                                    <p><strong>Reviewed by a manager</strong><small>The schedule decision has been recorded for this booking.</small></p>
+                                    <strong>Reviewed by a manager</strong>
                                 </div>
                             @endif
 

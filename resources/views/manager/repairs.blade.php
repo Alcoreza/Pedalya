@@ -119,10 +119,10 @@
                 </section>
 
                 <section class="repair-summary repairs-enter" style="--enter-delay: 130ms" aria-label="Repair overview">
-                    <article><span>Awaiting arrival today</span><strong>{{ str_pad($summary['awaiting_today'], 2, '0', STR_PAD_LEFT) }}</strong><small>Scheduled intake</small></article>
-                    <article class="summary-at-shop"><span>Bike at shop</span><strong>{{ str_pad($summary['at_shop'], 2, '0', STR_PAD_LEFT) }}</strong><small>Awaiting workshop start</small></article>
-                    <article class="summary-progress"><span>Repair in progress</span><strong>{{ str_pad($summary['in_progress'], 2, '0', STR_PAD_LEFT) }}</strong><small>Active workshop work</small></article>
-                    <article class="summary-completed"><span>Completed today</span><strong>{{ str_pad($summary['completed_today'], 2, '0', STR_PAD_LEFT) }}</strong><small>Ready for pickup</small></article>
+                    <article><span>Awaiting arrival today</span><strong>{{ str_pad($summary['awaiting_today'], 2, '0', STR_PAD_LEFT) }}</strong></article>
+                    <article class="summary-at-shop"><span>Bike at shop</span><strong>{{ str_pad($summary['at_shop'], 2, '0', STR_PAD_LEFT) }}</strong></article>
+                    <article class="summary-progress"><span>Repair in progress</span><strong>{{ str_pad($summary['in_progress'], 2, '0', STR_PAD_LEFT) }}</strong></article>
+                    <article class="summary-completed"><span>Completed today</span><strong>{{ str_pad($summary['completed_today'], 2, '0', STR_PAD_LEFT) }}</strong></article>
                 </section>
 
                 <nav class="repair-view-tabs repairs-enter" style="--enter-delay: 160ms" aria-label="Repair record views">
@@ -154,7 +154,6 @@
                     <section class="repair-ledger" aria-labelledby="repair-ledger-title">
                         <div class="ledger-heading">
                             <div><span>{{ $filters['tab'] === 'records' ? 'Workshop history' : 'Current workshop' }}</span><h2 id="repair-ledger-title">{{ $repairs->count() }} {{ Str::plural('record', $repairs->count()) }}</h2></div>
-                            <small>{{ $filters['tab'] === 'records' ? 'Completed and claimed' : 'Unfinished work stays visible' }}</small>
                         </div>
 
                         <div class="repair-tickets">
@@ -223,6 +222,16 @@
                                 <strong>{{ $selectedRepair['service'] }}</strong>
                                 <time datetime="{{ $selectedRepair['appointment_at']->toIso8601String() }}">Appointment: {{ $selectedRepair['appointment_at']->format('F d, Y · g:i A') }}</time>
                             </div>
+
+                            <details class="customer-notes">
+                                <summary>
+                                    <span>Customer problem details</span>
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"></path></svg>
+                                </summary>
+                                <div class="customer-notes-body">
+                                    <p>{{ filled($selectedRepair['notes'] ?? null) ? $selectedRepair['notes'] : 'No additional details were provided for this repair.' }}</p>
+                                </div>
+                            </details>
 
                             <dl class="repair-status-grid">
                                 <div><dt>Booking</dt><dd class="text-confirmed">{{ $selectedRepair['booking_status']['label'] }}</dd></div>
