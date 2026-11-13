@@ -23,6 +23,7 @@ class RegisterController extends Controller
             'mobile_number' => $validated['mobile_number'],
             'email' => $validated['email'],
             'password' => $validated['password'],
+            'role' => 'customer',
         ]);
 
         return redirect()

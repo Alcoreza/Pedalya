@@ -90,7 +90,7 @@
                         </div>
                     @endif
 
-                    <form class="login-form login-sequence" style="--login-delay: 240ms" method="POST" action="{{ url('/login') }}" data-login-preview novalidate>
+                    <form class="login-form login-sequence" style="--login-delay: 240ms" method="POST" action="{{ route('login.store') }}" data-login-form novalidate>
                         @csrf
 
                         <div class="field-group">
@@ -122,10 +122,6 @@
                             <span>Log in to Pedalya</span>
                             <i aria-hidden="true">→</i>
                         </button>
-
-                        <div class="login-preview-notice" role="status" aria-live="polite" data-login-notice hidden>
-                            The login interface is ready. Authentication will be connected during the backend phase.
-                        </div>
                     </form>
 
                     <div class="login-help login-sequence" style="--login-delay: 320ms">

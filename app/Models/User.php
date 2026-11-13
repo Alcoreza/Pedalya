@@ -23,6 +23,7 @@ class User extends Authenticatable
         'mobile_number',
         'email',
         'password',
+        'role',
     ];
 
     public $timestamps = false;

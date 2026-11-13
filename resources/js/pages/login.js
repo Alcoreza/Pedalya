@@ -10,14 +10,13 @@ if (passwordToggle && passwordInput) {
     });
 }
 
-const loginPreviewForm = document.querySelector('[data-login-preview]');
+const loginForm = document.querySelector('[data-login-form]');
 
-if (loginPreviewForm) {
-    const notice = loginPreviewForm.querySelector('[data-login-notice]');
-    const fields = [...loginPreviewForm.querySelectorAll('input[required]')];
+if (loginForm) {
+    const fields = [...loginForm.querySelectorAll('input[required]')];
 
     const setFieldError = (field) => {
-        const error = loginPreviewForm.querySelector(`[data-error-for="${field.name}"]`);
+        const error = loginForm.querySelector(`[data-error-for="${field.name}"]`);
         if (!error) return field.checkValidity();
 
         let message = '';
@@ -37,7 +36,7 @@ if (loginPreviewForm) {
         });
     });
 
-    loginPreviewForm.addEventListener('submit', (event) => {
+    loginForm.addEventListener('submit', (event) => {
         const isValid = fields.map(setFieldError).every(Boolean);
         if (!isValid) {
             event.preventDefault();
@@ -45,10 +44,5 @@ if (loginPreviewForm) {
             return;
         }
 
-        event.preventDefault();
-        if (notice) {
-            notice.hidden = false;
-            requestAnimationFrame(() => notice.classList.add('is-visible'));
-        }
     });
 }

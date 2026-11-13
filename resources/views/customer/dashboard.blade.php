@@ -20,7 +20,7 @@
 @include('customer.partials.navigation')
 
         <main class="customer-booking-shell">
-            <section class="dashboard-welcome" aria-labelledby="dashboard-title"><div><span class="section-kicker">Customer dashboard</span><h1 id="dashboard-title">Good morning,<br><em>Juan.</em></h1><p>Here’s the latest on your repair journey.</p></div><a class="booking-next dashboard-book-link" href="{{ route('customer.book') }}">Book a repair <span aria-hidden="true">→</span></a></section>
+            <section class="dashboard-welcome" aria-labelledby="dashboard-title"><div><span class="section-kicker">Customer dashboard</span><h1 id="dashboard-title">Good morning,<br><em>{{ \Illuminate\Support\Str::of(auth()->user()?->name ?? 'Rider')->trim()->before(' ') }}.</em></h1><p>Here’s the latest on your repair journey.</p></div><a class="booking-next dashboard-book-link" href="{{ route('customer.book') }}">Book a repair <span aria-hidden="true">→</span></a></section>
 
             <section class="dashboard-stats" aria-label="Customer summary">
                 <article><span>Active bookings</span><strong>02</strong><small>One repair in progress</small></article>

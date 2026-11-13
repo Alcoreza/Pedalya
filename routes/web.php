@@ -1,16 +1,18 @@
 <?php
 
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Manager\ActivityController;
 use App\Http\Controllers\Manager\BookingsController;
 use App\Http\Controllers\Manager\DashboardController;
 use App\Http\Controllers\Manager\RepairsController;
 use App\Http\Controllers\Manager\ScheduleController;
-use App\Http\Controllers\Auth\RegisterController;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
 
 Route::view('/login', 'auth.login')->name('login');
+Route::post('/login', [LoginController::class, 'store'])->name('login.store');
 
 Route::view('/register', 'auth.register')->name('register');
 Route::post('/register', [RegisterController::class, 'store'])->name('register.store');
@@ -28,7 +30,7 @@ Route::view('/customer/bookings/{booking}/payment', 'customer.payment')->name('c
 Route::view('/payments/{payment}/success', 'customer.payment-result', ['result' => 'success'])->name('customer.payment.success');
 Route::view('/payments/{payment}/failed', 'customer.payment-result', ['result' => 'failed'])->name('customer.payment.failed');
 
-Route::prefix('manager')->name('manager.')->group(function () {
+Route::prefix('manager')->name('manager.')->middleware(['auth', 'role:manager'])->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::get('/bookings', [BookingsController::class, 'index'])->name('bookings.index');
     Route::post('/bookings/{booking}/decision', [BookingsController::class, 'decide'])->name('bookings.decision');
