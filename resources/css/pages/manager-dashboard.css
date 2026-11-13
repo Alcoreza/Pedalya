@@ -1003,3 +1003,67 @@ body.manager-dashboard-page {
     .dial-progress { animation: none; }
     .dial-progress { stroke-dashoffset: calc(100 - var(--schedule-progress)); }
 }
+
+/* Shared interaction polish across the manager workspace. */
+.manager-dashboard-page button,
+.manager-dashboard-page a,
+.manager-dashboard-page input,
+.manager-dashboard-page select { -webkit-tap-highlight-color: transparent; }
+
+.manager-dashboard-page button {
+    transition: transform 180ms var(--ease-out), background-color 180ms ease, border-color 180ms ease, color 180ms ease, box-shadow 220ms ease;
+}
+
+.manager-dashboard-page button:not(:disabled):active,
+.manager-dashboard-page a:active { transform: scale(0.98); }
+
+.topbar-primary { position: relative; isolation: isolate; overflow: hidden; }
+.topbar-primary::before {
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    background: linear-gradient(110deg, transparent 20%, rgba(255, 255, 255, 0.16) 46%, transparent 72%);
+    content: '';
+    transform: translateX(-125%);
+    transition: transform 520ms var(--ease-out);
+}
+.topbar-primary:hover::before { transform: translateX(125%); }
+.topbar-primary:hover span { transform: translateX(3px); }
+.topbar-primary span { display: inline-block; transition: transform 220ms var(--ease-out); }
+
+.manager-nav a:hover svg,
+.manager-nav a:hover i { transform: translateX(2px) scale(1.04); }
+.manager-nav svg,
+.manager-nav i { transition: transform 220ms var(--ease-out); }
+
+.manager-profile button:active,
+.sidebar-signout:active,
+.icon-button:active { transform: scale(0.94); }
+
+.metric-item,
+.request-row,
+.timeline-item,
+.repair-list article {
+    transition: transform 220ms var(--ease-out), background-color 180ms ease, box-shadow 220ms ease;
+}
+
+.metric-item:hover { transform: translateY(-3px); background: rgba(255, 255, 255, 0.56); box-shadow: 0 14px 30px rgba(12, 40, 34, 0.06); }
+.timeline-item:hover { transform: translateY(-2px); }
+.repair-list article:hover { transform: translateX(3px); }
+.request-filters button:hover { transform: translateY(-1px); box-shadow: 0 7px 16px rgba(12, 40, 34, 0.06); }
+
+.manager-dashboard-page :is(button, a, input, select):focus-visible {
+    outline: 3px solid rgba(31, 100, 84, 0.24);
+    outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .manager-dashboard-page *,
+    .manager-dashboard-page *::before,
+    .manager-dashboard-page *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+    }
+}

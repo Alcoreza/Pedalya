@@ -164,3 +164,41 @@
     .activity-enter, .event-row { opacity: 1; transform: none; animation: none; }
     .console-scan, .event-row.event-pending > i { animation: none; }
 }
+
+/* Readability pass for operational records. */
+body.manager-activity-page .activity-summary span { font-size: 0.62rem; }
+body.manager-activity-page .activity-search input,
+body.manager-activity-page .activity-filters select,
+body.manager-activity-page .activity-filters > button { font-size: 0.62rem; }
+body.manager-activity-page .activity-filters label:not(.activity-search) > span,
+body.manager-activity-page .event-facts dt,
+body.manager-activity-page .event-metadata dt { font-size: 0.58rem; }
+body.manager-activity-page .console-heading small,
+body.manager-activity-page .event-row time span,
+body.manager-activity-page .event-copy > span,
+body.manager-activity-page .event-copy small { font-size: 0.6rem; }
+body.manager-activity-page .event-row time strong,
+body.manager-activity-page .event-copy strong { font-size: 0.68rem; }
+body.manager-activity-page .event-result,
+body.manager-activity-page .detail-result { font-size: 0.6rem; }
+body.manager-activity-page .event-identity > span { font-size: 0.56rem; }
+body.manager-activity-page .event-identity p,
+body.manager-activity-page .event-description p { font-size: 0.62rem; }
+body.manager-activity-page .event-metadata dd,
+body.manager-activity-page .security-note strong { font-size: 0.6rem; }
+body.manager-activity-page .security-note span { font-size: 0.6rem; }
+body.manager-activity-page :is(.event-row, .activity-filters button, .activity-filters a):focus-visible { outline: 3px solid rgba(201, 240, 108, 0.5); outline-offset: 2px; }
+
+/* Interaction polish for the audit log without obscuring record density. */
+.activity-summary article { transition: transform 220ms var(--ease-out), background-color 180ms ease, box-shadow 220ms ease; }
+.activity-summary article:hover { transform: translateY(-3px); background: rgba(255, 255, 255, 0.05); box-shadow: 0 14px 30px rgba(0, 0, 0, 0.12); }
+.activity-summary .summary-manager:hover { background: var(--color-brand); box-shadow: 0 15px 30px rgba(0, 0, 0, 0.22); }
+.activity-summary .summary-manager:hover span { color: rgba(255, 255, 255, 0.76); }
+.activity-summary .summary-manager:hover strong { color: var(--color-accent); }
+.activity-filters > button:hover { transform: translateY(-2px); background: var(--color-brand-deep); box-shadow: 0 11px 22px rgba(0, 0, 0, 0.18); }
+.activity-filters > button span { display: inline-block; transition: transform 220ms var(--ease-out); }
+.activity-filters > button:hover span { transform: translateX(3px); }
+.event-row { transition: transform 220ms var(--ease-out), background-color 180ms ease, box-shadow 220ms ease; }
+.event-row:hover { transform: translateX(3px); box-shadow: inset 3px 0 0 rgba(201, 240, 108, 0.48); }
+.event-row:hover > svg { transform: translateX(2px); }
+.event-row > svg { transition: transform 220ms var(--ease-out); }

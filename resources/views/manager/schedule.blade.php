@@ -150,18 +150,32 @@
                                     <header>
                                         <span>{{ $day['date']->format('D') }}</span>
                                         <strong id="day-{{ $day['date']->format('Ymd') }}">{{ $day['date']->format('d') }}</strong>
+                                        @if ($day['appointment_count'] > 0)
+                                            <b class="day-count" aria-label="{{ $day['appointment_count'] }} {{ Str::plural('booking', $day['appointment_count']) }}">{{ $day['appointment_count'] }}</b>
+                                        @endif
                                         @if ($day['is_today'])<small>Today</small>@endif
                                     </header>
 
                                     <div class="day-appointments">
-                                        @forelse ($day['appointments'] as $appointment)
-                                            <a class="appointment-card sync-card-{{ $appointment['calendar_status']['key'] }} {{ $selectedAppointment['reference'] === $appointment['reference'] ? 'is-selected' : '' }}" href="{{ route('manager.schedule.index', ['date' => $selectedDate->toDateString(), 'booking' => $appointment['reference']]) }}" aria-label="View appointment {{ $appointment['reference'] }}">
-                                                <span class="appointment-time">{{ $appointment['appointment_at']->format('g:i A') }}</span>
-                                                <strong>{{ $appointment['customer']['name'] }}</strong>
-                                                <small>{{ $appointment['service'] }}</small>
-                                                <span class="appointment-reference">{{ $appointment['reference'] }}</span>
-                                                <i aria-label="Calendar {{ $appointment['calendar_status']['label'] }}"></i>
-                                            </a>
+                                        @forelse ($day['slots'] as $slot)
+                                            <section class="appointment-slot {{ $slot['is_shared'] ? 'is-shared' : '' }}" aria-label="{{ $slot['time']->format('g:i A') }} appointment slot">
+                                                <header class="slot-heading">
+                                                    <time datetime="{{ $slot['time']->toIso8601String() }}">{{ $slot['time']->format('g:i A') }}</time>
+                                                    @if ($slot['is_shared'])
+                                                        <span>{{ $slot['appointments']->count() }} bookings</span>
+                                                    @endif
+                                                </header>
+                                                <div class="slot-bookings">
+                                                    @foreach ($slot['appointments'] as $appointment)
+                                                        <a class="appointment-card sync-card-{{ $appointment['calendar_status']['key'] }} {{ $selectedAppointment['reference'] === $appointment['reference'] ? 'is-selected' : '' }}" href="{{ route('manager.schedule.index', ['date' => $selectedDate->toDateString(), 'booking' => $appointment['reference']]) }}" aria-label="View appointment {{ $appointment['reference'] }} at {{ $appointment['appointment_at']->format('g:i A') }}">
+                                                            <span class="appointment-reference">{{ $appointment['reference'] }}</span>
+                                                            <strong>{{ $appointment['customer']['name'] }}</strong>
+                                                            <small>{{ $appointment['service'] }}</small>
+                                                            <i aria-label="Calendar {{ $appointment['calendar_status']['label'] }}"></i>
+                                                        </a>
+                                                    @endforeach
+                                                </div>
+                                            </section>
                                         @empty
                                             <div class="day-empty"><span>Open day</span></div>
                                         @endforelse

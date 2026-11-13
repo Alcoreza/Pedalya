@@ -112,7 +112,7 @@
                         <span class="intro-kicker">Request control</span>
                         <h1 id="bookings-title">The booking<br><em>desk.</em></h1>
                     </div>
-                    <p>Review customer requests, check payment and calendar states, then make a clear booking decision.</p>
+                    <p>Bookings are confirmed automatically while capacity is available. Only schedule overlaps that exceed capacity are sent for manager review.</p>
                 </section>
 
                 <section class="booking-summary bookings-enter" style="--enter-delay: 130ms" aria-label="Booking overview">
@@ -122,13 +122,13 @@
                     </article>
                     <article>
                         <i class="summary-dot dot-amber"></i>
-                        <span>Pending review</span>
-                        <strong>{{ $summary['pending'] }}</strong>
+                        <span>Schedule review</span>
+                        <strong>{{ $summary['review'] }}</strong>
                     </article>
                     <article>
                         <i class="summary-dot dot-green"></i>
-                        <span>Confirmed</span>
-                        <strong>{{ $summary['confirmed'] }}</strong>
+                        <span>Auto-confirmed</span>
+                        <strong>{{ $summary['automatic'] }}</strong>
                     </article>
                     <article>
                         <i class="summary-dot dot-red"></i>
@@ -150,6 +150,16 @@
                             <option value="">All states</option>
                             @foreach ($filterOptions['booking'] as $value => $label)
                                 <option value="{{ $value }}" @selected($filters['booking_status'] === $value)>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </label>
+
+                    <label>
+                        <span>Processing</span>
+                        <select name="processing_method">
+                            <option value="">All methods</option>
+                            @foreach ($filterOptions['processing'] as $value => $label)
+                                <option value="{{ $value }}" @selected($filters['processing_method'] === $value)>{{ $label }}</option>
                             @endforeach
                         </select>
                     </label>
@@ -187,11 +197,10 @@
                                 <span>Current view</span>
                                 <h2 id="booking-queue-title">{{ $bookings->count() }} {{ Str::plural('booking', $bookings->count()) }}</h2>
                             </div>
-                            <small>Newest first</small>
                         </div>
 
                         <div class="queue-labels" aria-hidden="true">
-                            <span>Customer</span><span>Requested appointment</span><span>Payment</span><span>Booking</span><span></span>
+                            <span>Customer</span><span>Requested appointment</span><span>Payment</span><span>Processing</span><span></span>
                         </div>
 
                         <div class="queue-list">
@@ -207,7 +216,7 @@
                                         <small>{{ $booking['appointment_at']->format('g:i A') }}</small>
                                     </time>
                                     <span class="state-chip queue-payment state-{{ $booking['payment_status']['key'] }}">{{ $booking['payment_status']['label'] }}</span>
-                                    <span class="state-chip queue-booking state-{{ $booking['booking_status']['key'] }}">{{ $booking['booking_status']['label'] }}</span>
+                                    <span class="state-chip queue-booking process-{{ $booking['processing_method']['key'] }}">{{ $booking['processing_method']['label'] }}</span>
                                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"></path></svg>
                                 </a>
                             @empty
@@ -248,12 +257,56 @@
                                 <div><dt>Submitted</dt><dd>{{ $selectedBooking['submitted_at']->diffForHumans() }}</dd></div>
                             </dl>
 
+                            <details class="customer-notes">
+                                <summary>
+                                    <span>Customer problem details</span>
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"></path></svg>
+                                </summary>
+                                <div class="customer-notes-body">
+                                    <p>{{ filled($selectedBooking['notes'] ?? null) ? $selectedBooking['notes'] : 'No additional details were provided for this booking.' }}</p>
+                                </div>
+                            </details>
+
                             <div class="status-matrix">
                                 <div><span>Booking</span><strong class="status-text text-{{ $selectedBooking['booking_status']['key'] }}">{{ $selectedBooking['booking_status']['label'] }}</strong></div>
+                                <div><span>Processing</span><strong class="status-text process-text-{{ $selectedBooking['processing_method']['key'] }}">{{ $selectedBooking['processing_method']['label'] }}</strong></div>
                                 <div><span>Payment</span><strong class="status-text text-{{ $selectedBooking['payment_status']['key'] }}">{{ $selectedBooking['payment_status']['label'] }}</strong></div>
                                 <div><span>Calendar sync</span><strong class="status-text text-{{ $selectedBooking['calendar_status']['key'] }}">{{ $selectedBooking['calendar_status']['label'] }}</strong></div>
+                                <div><span>Service window</span><strong>{{ $selectedBooking['schedule_assessment']['duration_minutes'] }} minutes</strong></div>
                                 <div><span>Repair</span><strong class="status-text {{ $selectedBooking['repair_status'] ? 'text-'.$selectedBooking['repair_status']['key'] : '' }}">{{ $selectedBooking['repair_status']['label'] ?? 'Not yet recorded' }}</strong></div>
                             </div>
+
+                            @if ($selectedBooking['booking_status']['key'] === 'review_required')
+                                <section class="capacity-review" aria-labelledby="capacity-review-title">
+                                    <header>
+                                        <div>
+                                            <span>Schedule review needed</span>
+                                            <h3 id="capacity-review-title">Requested time window</h3>
+                                        </div>
+                                        <time datetime="{{ $selectedBooking['appointment_at']->toIso8601String() }}">{{ $selectedBooking['appointment_at']->format('g:i A') }}–{{ $selectedBooking['schedule_assessment']['ends_at']->format('g:i A') }}</time>
+                                    </header>
+
+                                    <div class="overlap-list">
+                                        <span>Bookings within this timeframe</span>
+                                        @foreach ($selectedBooking['schedule_assessment']['conflicts'] as $conflict)
+                                            <a href="{{ route('manager.bookings.index', array_merge(request()->except('booking'), ['booking' => $conflict['reference']])) }}">
+                                                <div><strong>{{ $conflict['reference'] }} · {{ $conflict['customer'] }}</strong><small>{{ $conflict['service'] }}</small></div>
+                                                <time>{{ $conflict['appointment_at']->format('g:i A') }}–{{ $conflict['ends_at']->format('g:i A') }}</time>
+                                            </a>
+                                        @endforeach
+                                    </div>
+                                </section>
+                            @elseif ($selectedBooking['processing_method']['key'] === 'automatic')
+                                <div class="processing-note processing-automatic">
+                                    <span aria-hidden="true">✓</span>
+                                    <strong>Confirmed automatically</strong>
+                                </div>
+                            @elseif ($selectedBooking['processing_method']['key'] === 'manual')
+                                <div class="processing-note processing-manual">
+                                    <span aria-hidden="true">↗</span>
+                                    <strong>Reviewed by a manager</strong>
+                                </div>
+                            @endif
 
                             @if ($selectedBooking['calendar_status']['key'] === 'failed')
                                 <div class="integration-note integration-failed">
@@ -267,10 +320,10 @@
                                 </div>
                             @endif
 
-                            @if ($selectedBooking['booking_status']['key'] === 'pending')
+                            @if ($selectedBooking['booking_status']['key'] === 'review_required')
                                 <div class="decision-panel">
-                                    <span>Manager decision</span>
-                                    <p>Confirming allows the backend to begin calendar synchronization. Rejecting must not create a calendar event.</p>
+                                    <span>Schedule decision</span>
+                                    <p>Review the overlapping bookings, then confirm this request if the workshop can accommodate it.</p>
                                     <div>
                                         <button class="decision-confirm" type="button" data-decision-open="confirmed">Confirm booking</button>
                                         <button class="decision-reject" type="button" data-decision-open="rejected">Reject request</button>
@@ -283,7 +336,7 @@
             </main>
         </div>
 
-        @if ($selectedBooking && $selectedBooking['booking_status']['key'] === 'pending')
+        @if ($selectedBooking && $selectedBooking['booking_status']['key'] === 'review_required')
             <dialog class="decision-dialog" data-decision-dialog>
                 <form method="POST" action="{{ route('manager.bookings.decision', $selectedBooking['reference']) }}">
                     @csrf
