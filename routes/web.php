@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Customer\ProfileController;
 use App\Http\Controllers\Manager\ActivityController;
 use App\Http\Controllers\Manager\BookingsController;
 use App\Http\Controllers\Manager\DashboardController;
@@ -24,7 +25,8 @@ Route::view('/book/confirmation', 'customer.confirmation')->name('customer.confi
 Route::view('/customer/bookings', 'customer.bookings')->name('customer.bookings');
 Route::redirect('/customer', '/customer/dashboard');
 Route::view('/customer/dashboard', 'customer.dashboard')->name('customer.dashboard');
-Route::view('/customer/profile', 'customer.profile')->name('customer.profile');
+Route::get('/customer/profile', [ProfileController::class, 'edit'])->middleware('auth')->name('customer.profile');
+Route::put('/customer/profile', [ProfileController::class, 'update'])->middleware('auth')->name('customer.profile.update');
 Route::view('/customer/bookings/{booking}', 'customer.booking-detail')->name('customer.booking.detail');
 Route::redirect('/customer/repairs', '/customer/bookings')->name('customer.repairs');
 Route::get('/customer/repairs/{booking}', fn (string $booking) => redirect()->route('customer.booking.detail', $booking))->name('customer.repair');

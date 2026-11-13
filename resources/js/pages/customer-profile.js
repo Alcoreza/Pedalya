@@ -17,10 +17,9 @@ if (picture) {
 }
 
 profileForm?.addEventListener('submit', (event) => {
-    event.preventDefault();
     let valid = true;
 
-    profileForm.querySelectorAll('[required]').forEach((field) => {
+    profileForm.querySelectorAll('[required]:not([name="location"])').forEach((field) => {
         const error = profileForm.querySelector('[data-profile-error="' + field.name + '"]');
         const wrapper = field.closest('.profile-field');
         let message = field.value.trim() ? '' : field.previousElementSibling.textContent + ' is required.';
@@ -29,14 +28,13 @@ profileForm?.addEventListener('submit', (event) => {
             message = 'Enter a valid email address.';
         }
 
-        error.textContent = message;
+        if (error) error.textContent = message;
         wrapper.classList.toggle('is-invalid', Boolean(message));
         valid = valid && !message;
     });
 
-    const message = profileForm.querySelector('[data-profile-message]');
-    message.textContent = valid
-        ? 'Your changes are saved in this frontend preview.'
-        : 'Please check the highlighted fields.';
-    message.classList.toggle('profile-status-success', valid);
+    if (!valid) {
+        event.preventDefault();
+        profileForm.querySelector('.is-invalid input')?.focus();
+    }
 });
