@@ -34,6 +34,17 @@
                     <a class="customer-return-link" href="{{ route('customer.dashboard') }}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 6-6 6 6 6M4 12h16"/></svg>Back to dashboard</a>
                 </aside>
             </div>
+            <dialog class="customer-signout-dialog customer-profile-save-dialog" aria-labelledby="profile-save-dialog-title" aria-describedby="profile-save-dialog-description" data-profile-save-dialog>
+                <div class="customer-signout-dialog-content">
+                    <span class="section-kicker">Profile update</span>
+                    <h2 id="profile-save-dialog-title">Save your changes?</h2>
+                    <p id="profile-save-dialog-description">Your updated contact details will be saved to your account.</p>
+                    <div class="customer-signout-dialog-actions">
+                        <button class="customer-signout-cancel" type="button" data-profile-save-cancel>Continue editing</button>
+                        <button class="customer-signout-confirm" type="button" data-profile-save-confirm>Save changes</button>
+                    </div>
+                </div>
+            </dialog>
         </main>
     </body>
 </html>

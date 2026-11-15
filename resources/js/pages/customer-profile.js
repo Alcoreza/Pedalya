@@ -1,4 +1,17 @@
 const profileForm = document.querySelector('[data-profile-form]');
+const saveDialog = document.querySelector('[data-profile-save-dialog]');
+const saveConfirmButton = saveDialog?.querySelector('[data-profile-save-confirm]');
+let profileSaveConfirmed = false;
+
+saveDialog?.querySelector('[data-profile-save-cancel]')?.addEventListener('click', () => saveDialog.close());
+saveConfirmButton?.addEventListener('click', () => {
+    profileSaveConfirmed = true;
+    saveDialog.close();
+    profileForm?.requestSubmit();
+});
+saveDialog?.addEventListener('click', (event) => {
+    if (event.target === saveDialog) saveDialog.close();
+});
 
 const profileName = profileForm?.querySelector('[name="name"]');
 const initials = profileForm?.querySelector('[data-profile-initials]');
@@ -36,5 +49,11 @@ profileForm?.addEventListener('submit', (event) => {
     if (!valid) {
         event.preventDefault();
         profileForm.querySelector('.is-invalid input')?.focus();
+        return;
+    }
+
+    if (saveDialog && !profileSaveConfirmed) {
+        event.preventDefault();
+        saveDialog.showModal();
     }
 });

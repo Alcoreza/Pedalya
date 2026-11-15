@@ -20,6 +20,7 @@ Route::view('/', 'welcome')->name('home');
 
 Route::view('/login', 'auth.login')->name('login');
 Route::post('/login', [LoginController::class, 'store'])->name('login.store');
+Route::post('/logout', [LoginController::class, 'destroy'])->middleware('auth')->name('logout');
 
 Route::view('/register', 'auth.register')->name('register');
 Route::post('/register', [RegisterController::class, 'store'])->name('register.store');

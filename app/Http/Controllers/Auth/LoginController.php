@@ -28,4 +28,13 @@ class LoginController extends Controller
             ? redirect()->route('manager.dashboard')
             : redirect()->route('customer.dashboard');
     }
+
+    public function destroy(Request $request): RedirectResponse
+    {
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('login');
+    }
 }

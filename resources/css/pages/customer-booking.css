@@ -274,6 +274,35 @@
     text-decoration: none;
     transition: color 200ms ease;
 }
+.customer-signout-button { appearance:none; border:0; padding:0; background:transparent; color:inherit; cursor:pointer; font:inherit; text-align:left; }
+.customer-signout-dialog,
+.customer-profile-save-dialog {
+    position: fixed;
+    inset: 0;
+    margin: auto;
+    width: min(92vw, 30rem);
+    max-height: min(90dvh, 30rem);
+    max-width: none;
+    padding: 0;
+    overflow: auto;
+    border: 1px solid rgba(19, 48, 39, .14);
+    border-radius: 1.5rem;
+    background: #fbfcf9;
+    color: var(--color-ink);
+    box-shadow: 0 1.5rem 5rem rgba(8, 32, 25, .28);
+}
+.customer-signout-dialog::backdrop,
+.customer-profile-save-dialog::backdrop { background: rgba(8, 32, 25, .58); backdrop-filter: blur(4px); }
+.customer-signout-dialog-content { padding: clamp(1.5rem, 5vw, 2.25rem); }
+.customer-signout-dialog h2,
+.customer-profile-save-dialog h2 { margin: .65rem 0 .6rem; font-size: clamp(1.4rem, 4vw, 1.8rem); line-height: 1.15; }
+.customer-signout-dialog p,
+.customer-profile-save-dialog p { margin: 0; color: var(--color-ink-soft); line-height: 1.6; }
+.customer-signout-dialog-actions { display: flex; justify-content: flex-end; gap: .75rem; margin-top: 1.6rem; }
+.customer-signout-dialog-actions button { min-height: 2.8rem; padding: .7rem 1rem; border-radius: 999px; cursor: pointer; font: inherit; font-weight: 700; }
+.customer-signout-cancel { border: 1px solid var(--color-line); background: transparent; color: var(--color-ink); }
+.customer-signout-confirm { border: 1px solid var(--color-brand-deep); background: var(--color-brand-deep); color: white; }
+@media (max-width: 420px) { .customer-signout-dialog-actions { flex-direction: column-reverse; } .customer-signout-dialog-actions form, .customer-signout-dialog-actions button { width: 100%; } }
 .customer-nav-login::after {
     position: absolute;
     right: 0;
