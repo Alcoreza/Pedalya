@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Customer\ProfileController;
 use App\Http\Controllers\Customer\BookingFlowController;
+use App\Http\Controllers\Customer\BookingsController as CustomerBookingsController;
 use App\Http\Controllers\Customer\PayMongoCheckoutController;
 use App\Http\Controllers\Customer\PaymentResultController;
 use App\Http\Controllers\Manager\ActivityController;
@@ -30,6 +31,7 @@ Route::middleware(['auth', 'role:customer'])->group(function () {
     Route::get('/book/review', [BookingFlowController::class, 'review'])->name('customer.review');
     Route::post('/book/review', [BookingFlowController::class, 'store'])->name('customer.review.store');
     Route::get('/book/confirmation/{reference}', [BookingFlowController::class, 'confirmation'])->name('customer.confirmation');
+    Route::get('/customer/bookings', [CustomerBookingsController::class, 'index'])->name('customer.bookings');
     Route::post('/book/confirmation/{reference}/checkout', [PayMongoCheckoutController::class, 'start'])->name('customer.checkout');
     Route::get('/payments/{payment}/success', [PaymentResultController::class, 'success'])->name('customer.payment.success');
     Route::get('/payments/{payment}/failed', [PaymentResultController::class, 'failed'])->name('customer.payment.failed');
@@ -37,7 +39,6 @@ Route::middleware(['auth', 'role:customer'])->group(function () {
 
 Route::post('/webhooks/paymongo', PayMongoWebhookController::class)->name('webhooks.paymongo');
 
-Route::view('/customer/bookings', 'customer.bookings')->name('customer.bookings');
 Route::redirect('/customer', '/customer/dashboard');
 Route::view('/customer/dashboard', 'customer.dashboard')->name('customer.dashboard');
 Route::get('/customer/profile', [ProfileController::class, 'edit'])->middleware('auth')->name('customer.profile');
