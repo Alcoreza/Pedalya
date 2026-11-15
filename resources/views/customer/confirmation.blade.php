@@ -33,6 +33,17 @@
                 </div>
             </section>
 
+            <section class="confirmation-calendar" aria-live="polite">
+                @if (! $booking->user?->googleCalendarConnection)
+                    <div><strong>Add this appointment to your Google Calendar</strong><p>Connect your Google account and we’ll add the selected date and time for you.</p></div>
+                    <a href="{{ route('customer.calendar.connect') }}">Connect Google Calendar <span aria-hidden="true">&#8599;</span></a>
+                @elseif ($booking->calendar_status === 'synchronized')
+                    <div><strong>Appointment added to Google Calendar</strong><p>Connected account: {{ $booking->user->googleCalendarConnection->google_email }}</p></div>
+                @elseif ($booking->calendar_status === 'failed')
+                    <div><strong>Calendar sync needs attention</strong><p>The booking is saved, but Google Calendar could not be updated. You can reconnect your calendar from your profile.</p></div>
+                @endif
+            </section>
+
             @if ($errors->any())
                 <div class="review-form-message" role="alert">{{ $errors->first() }}</div>
             @endif

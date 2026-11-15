@@ -10,6 +10,9 @@
 .calendar-preview-bar strong { color: var(--color-brand-deep); font-size: .76rem; }
 .calendar-preview-bar div span { color: var(--color-muted); font-size: .65rem; line-height: 1.35; }
 .calendar-preview-state { padding: .35rem .5rem; border-radius: 99rem; color: var(--color-brand); background: var(--color-accent-soft); font-size: .62rem; font-weight: 800; white-space: nowrap; }
+.schedule-calendar-connect-row { display:flex; flex-wrap:wrap; align-items:center; gap:.5rem 1rem; margin:.45rem 0 0; font-size:.68rem; line-height:1.45; }
+.calendar-connect-link { color:var(--color-brand); font-weight:800; text-underline-offset:.15rem; }
+.calendar-connected-label { color:var(--color-brand); font-weight:700; }
 .schedule-panel-heading > div:first-child > span { color: var(--color-brand); font-size: .7rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
 .schedule-panel h2 { margin: .4rem 0 0; color: var(--color-brand-deep); font-size: 1.45rem; letter-spacing: -.04em; }
 .schedule-legend { display: flex; gap: 1rem; color: var(--color-muted); font-size: .7rem; font-weight: 700; }

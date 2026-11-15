@@ -7,6 +7,7 @@ use App\Models\Booking;
 use App\Models\Payment;
 use App\Models\Service;
 use App\Services\Bookings\BookingAvailabilityService;
+use App\Services\GoogleCalendarService;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,7 +18,10 @@ use Illuminate\View\View;
 
 class BookingFlowController extends Controller
 {
-    public function __construct(private readonly BookingAvailabilityService $availability)
+    public function __construct(
+        private readonly BookingAvailabilityService $availability,
+        private readonly GoogleCalendarService $googleCalendar,
+    )
     {
     }
 
@@ -63,6 +67,7 @@ class BookingFlowController extends Controller
                 'dateOptionsData' => [],
                 'selectedDate' => null,
                 'availableSlots' => [],
+                'calendarConnection' => $request->user()->googleCalendarConnection,
             ]);
         }
 
@@ -81,6 +86,7 @@ class BookingFlowController extends Controller
             ])->values()->all(),
             'selectedDate' => $selectedDate,
             'availableSlots' => $selectedOption['slots'],
+            'calendarConnection' => $request->user()->googleCalendarConnection,
         ]);
     }
 
@@ -191,6 +197,8 @@ class BookingFlowController extends Controller
                 ->withErrors(['time' => 'That appointment time was just taken. Please choose another slot.']);
         }
 
+        $this->googleCalendar->syncBooking($booking);
+
         $request->session()->forget('booking_flow');
 
         return redirect()->route('customer.confirmation', ['reference' => $booking->reference]);
@@ -199,7 +207,7 @@ class BookingFlowController extends Controller
     public function confirmation(Request $request, string $reference): View
     {
         $booking = Booking::query()
-            ->with(['service', 'payment'])
+            ->with(['service', 'payment', 'user.googleCalendarConnection'])
             ->where('user_id', $request->user()->id)
             ->where('reference', $reference)
             ->firstOrFail();

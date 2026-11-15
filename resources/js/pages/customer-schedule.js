@@ -16,6 +16,12 @@ if (scheduleForm) {
     const optionsElement = schedulePanel.querySelector('[data-schedule-options]');
     const dateOptions = JSON.parse(optionsElement?.textContent ?? '[]');
     const optionsByDate = new Map(dateOptions.map((option) => [option.key, option]));
+    const selectionStorageKey = `pedalya-schedule-selection-${schedulePanel.dataset.serviceId}`;
+    const saveSelection = () => {
+        try {
+            sessionStorage.setItem(selectionStorageKey, JSON.stringify({ date: selectedDate.value, time: selectedTime.value }));
+        } catch {}
+    };
 
     const selectTime = (button) => {
         slotGrid.querySelectorAll('[data-slot]').forEach((slot) => {
@@ -27,6 +33,7 @@ if (scheduleForm) {
         selectedTime.value = button.dataset.slot;
         nextButton.disabled = false;
         message.textContent = 'Time selected. Continue when you’re ready.';
+        saveSelection();
     };
 
     const renderSlots = (option) => {
@@ -78,6 +85,7 @@ if (scheduleForm) {
         calendarDay.textContent = option.day;
         openSlots.textContent = String(option.slots.length);
         renderSlots(option);
+        saveSelection();
     });
 
     slotGrid.addEventListener('click', (event) => {
@@ -85,8 +93,28 @@ if (scheduleForm) {
         if (button) selectTime(button);
     });
 
+    if (schedulePanel.dataset.calendarReturned === 'true') {
+        try {
+            const savedSelection = JSON.parse(sessionStorage.getItem(selectionStorageKey) ?? 'null');
+            sessionStorage.removeItem(selectionStorageKey);
+            const savedDateButton = dateButtons.find((button) => button.dataset.dateOption === savedSelection?.date);
+            if (savedDateButton) {
+                savedDateButton.click();
+                const savedTimeButton = [...slotGrid.querySelectorAll('[data-slot]')]
+                    .find((button) => button.dataset.slot === savedSelection?.time);
+                if (savedTimeButton) savedTimeButton.click();
+            }
+            sessionStorage.removeItem(selectionStorageKey);
+        } catch {
+            sessionStorage.removeItem(selectionStorageKey);
+        }
+    }
+
     scheduleForm.addEventListener('submit', (event) => {
-        if (selectedTime.value) return;
+        if (selectedTime.value) {
+            sessionStorage.removeItem(selectionStorageKey);
+            return;
+        }
 
         event.preventDefault();
         message.textContent = 'Choose an available time to continue.';

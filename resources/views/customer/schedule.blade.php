@@ -20,7 +20,7 @@
                 <div class="selected-service-summary">{{ $service->name }} · {{ $service->duration_minutes }} min · &#8369;{{ number_format((float) $service->price, 0) }}</div>
             </section>
 
-            <section class="schedule-panel" aria-label="Available appointment times" data-schedule-panel>
+            <section class="schedule-panel" aria-label="Available appointment times" data-schedule-panel data-service-id="{{ $service->id }}" data-calendar-returned="{{ session('calendar_returned') ? 'true' : 'false' }}">
                 <div class="schedule-panel-heading">
                     <div><span data-calendar-month>{{ $selectedDate?->format('F Y') ?? 'Upcoming dates' }}</span><h2>Available appointments</h2></div>
                     <div class="schedule-legend"><span><i class="legend-available"></i> Available</span><span><i class="legend-unavailable"></i> Fully booked</span></div>
@@ -30,6 +30,16 @@
                     <span class="calendar-preview-mark" data-calendar-day>{{ $selectedDate?->format('d') ?? '—' }}</span>
                     <div><strong>Pedalya workshop calendar</strong><span>Live availability · times shown in Asia/Manila</span></div>
                     <span class="calendar-preview-state"><span data-open-slots>{{ $dateOptions->sum('available_slots') }}</span> open slots</span>
+                </div>
+                <div class="schedule-calendar-connect-row">
+                    @if ($calendarConnection)
+                        <span class="calendar-connected-label">Google Calendar connected: {{ $calendarConnection->google_email }}</span>
+                    @else
+                        <a class="calendar-connect-link" href="{{ route('customer.calendar.connect', ['return_to' => 'schedule']) }}">Connect Google Calendar</a>
+                    @endif
+                    @if (session('calendar_message') || session('calendar_error'))
+                        <span role="status">{{ session('calendar_message') ?? session('calendar_error') }}</span>
+                    @endif
                 </div>
 
                 <div class="date-grid" aria-label="Available dates">

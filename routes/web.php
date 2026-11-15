@@ -6,6 +6,7 @@ use App\Http\Controllers\Customer\ProfileController;
 use App\Http\Controllers\Customer\BookingFlowController;
 use App\Http\Controllers\Customer\BookingsController as CustomerBookingsController;
 use App\Http\Controllers\Customer\DashboardController as CustomerDashboardController;
+use App\Http\Controllers\Customer\GoogleCalendarConnectionController;
 use App\Http\Controllers\Customer\PayMongoCheckoutController;
 use App\Http\Controllers\Customer\PaymentResultController;
 use App\Http\Controllers\Manager\ActivityController;
@@ -35,6 +36,9 @@ Route::middleware(['auth', 'role:customer'])->group(function () {
     Route::get('/book/confirmation/{reference}', [BookingFlowController::class, 'confirmation'])->name('customer.confirmation');
     Route::get('/customer/bookings', [CustomerBookingsController::class, 'index'])->name('customer.bookings');
     Route::get('/customer/dashboard', CustomerDashboardController::class)->name('customer.dashboard');
+    Route::get('/customer/calendar/connect', [GoogleCalendarConnectionController::class, 'connect'])->name('customer.calendar.connect');
+    Route::get('/customer/calendar/callback', [GoogleCalendarConnectionController::class, 'callback'])->name('customer.calendar.callback');
+    Route::delete('/customer/calendar/disconnect', [GoogleCalendarConnectionController::class, 'disconnect'])->name('customer.calendar.disconnect');
     Route::post('/book/confirmation/{reference}/checkout', [PayMongoCheckoutController::class, 'start'])->name('customer.checkout');
     Route::get('/payments/{payment}/success', [PaymentResultController::class, 'success'])->name('customer.payment.success');
     Route::get('/payments/{payment}/failed', [PaymentResultController::class, 'failed'])->name('customer.payment.failed');

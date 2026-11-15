@@ -28,6 +28,14 @@
 .profile-side-panel > p { margin:0 0 1.5rem; color:rgba(255,255,255,.7); font-size:.78rem; line-height:1.65; }
 .profile-side-detail { display:flex; justify-content:space-between; gap:1rem; padding:.85rem 0; border-top:1px solid rgba(255,255,255,.16); color:rgba(255,255,255,.6); font-size:.72rem; }
 .profile-side-detail strong { color:white; font-size:.76rem; }
+.profile-calendar-connection { display:grid; gap:.45rem; margin-top:.8rem; padding:1rem 0; border-top:1px solid rgba(255,255,255,.16); color:rgba(255,255,255,.7); font-size:.72rem; }
+.profile-calendar-connection > span { color:rgba(255,255,255,.65); }
+.profile-calendar-connection > strong { color:var(--color-accent); }
+.profile-calendar-connection small { overflow-wrap:anywhere; }
+.profile-calendar-connection p { margin:0; line-height:1.5; }
+.profile-calendar-connection a,.profile-calendar-connection button { justify-self:start; padding:.6rem .8rem; border:1px solid rgba(201,240,108,.45); border-radius:999px; color:var(--color-accent); background:transparent; font:inherit; font-weight:800; text-decoration:none; cursor:pointer; }
+.profile-calendar-connection a:hover,.profile-calendar-connection button:hover { background:rgba(201,240,108,.1); }
+.profile-calendar-connection .profile-calendar-error { color:#ffc6bc; line-height:1.5; }
 .profile-side-panel .customer-return-link { margin-top:1.2rem; color:var(--color-accent); }
 .profile-side-panel .customer-return-link::before { border:2px solid var(--color-accent); }
 .profile-side-panel .customer-return-link:hover,.profile-side-panel .customer-return-link:focus-visible { color:var(--color-accent); background:rgba(201,240,108,.12); }

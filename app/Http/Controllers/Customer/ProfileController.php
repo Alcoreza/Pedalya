@@ -12,9 +12,12 @@ class ProfileController extends Controller
 {
     public function edit(Request $request): View
     {
-        $user = $request->user()->loadCount('bookings');
+        $user = $request->user()->loadCount('bookings')->load('googleCalendarConnection');
 
-        return view('customer.profile', ['user' => $user]);
+        return view('customer.profile', [
+            'user' => $user,
+            'calendarConnection' => $user->googleCalendarConnection,
+        ]);
     }
 
     public function update(Request $request): RedirectResponse

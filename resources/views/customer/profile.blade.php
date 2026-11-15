@@ -31,6 +31,23 @@
                 <aside class="profile-side-panel">
                     <span class="section-kicker">Account snapshot</span><h2>Ready for your next ride.</h2><p>Your saved contact details are linked to your signed-in account.</p>
                     <div class="profile-side-detail"><span>Member since</span><strong>{{ $user->created_at?->format('F Y') ?? 'Unknown' }}</strong></div><div class="profile-side-detail"><span>Bookings</span><strong>{{ $user->bookings_count }} {{ $user->bookings_count === 1 ? 'repair visit' : 'repair visits' }}</strong></div>
+                    <div class="profile-calendar-connection">
+                        <span>Google Calendar</span>
+                        @if ($calendarConnection)
+                            <strong>Connected</strong><small>{{ $calendarConnection->google_email }}</small>
+                            <form method="POST" action="{{ route('customer.calendar.disconnect') }}">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit">Disconnect calendar</button>
+                            </form>
+                        @else
+                            <p>Connect your Google account to add upcoming appointments to your calendar.</p>
+                            <a href="{{ route('customer.calendar.connect') }}">Connect Google Calendar <span aria-hidden="true">&#8599;</span></a>
+                        @endif
+                        @if (session('calendar_error'))
+                            <small class="profile-calendar-error" role="alert">{{ session('calendar_error') }}</small>
+                        @endif
+                    </div>
                     <a class="customer-return-link" href="{{ route('customer.dashboard') }}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 6-6 6 6 6M4 12h16"/></svg>Back to dashboard</a>
                 </aside>
             </div>
