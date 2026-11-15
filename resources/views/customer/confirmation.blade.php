@@ -3,65 +3,57 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="description" content="Your Pedalya bike repair booking preview confirmation.">
-
-        <title>Booking preview | Pedalya</title>
-
+        <meta name="description" content="Your Pedalya bike repair booking confirmation.">
+        <title>Booking confirmed | Pedalya</title>
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=manrope:400,500,600,700,800" rel="stylesheet" />
-
-@vite(['resources/css/app.css', 'resources/css/pages/customer-booking.css', 'resources/css/pages/customer-confirmation.css', 'resources/css/pages/customer-typography.css', 'resources/js/app.js', 'resources/js/pages/customer-confirmation.js'])
+        @vite(['resources/css/app.css', 'resources/css/pages/customer-booking.css', 'resources/css/pages/customer-confirmation.css', 'resources/css/pages/customer-typography.css', 'resources/js/app.js'])
     </head>
     <body class="customer-booking-page customer-confirmation-page">
-        {{-- Legacy header removed; the shared customer navigation is rendered below.
-            <a class="brand" href="{{ route('home') }}" aria-label="Return to Pedalya home">
-                <span class="brand-mark" aria-hidden="true">
-                    <svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="10.5"></circle><circle cx="16" cy="16" r="3"></circle><path d="M16 5.5v7.5M16 19v7.5M5.5 16H13M19 16h7.5M8.6 8.6l5.3 5.3M18.1 18.1l5.3 5.3M23.4 8.6l-5.3 5.3M13.9 18.1l-5.3 5.3"></path></svg>
-                </span>
-                <span>Pedalya</span>
-            </a>
-            <div class="customer-header-actions">
-                <span class="preview-pill"><i></i> Frontend preview</span>
-                <a class="header-link" href="{{ route('home') }}">Sign out <span aria-hidden="true">↗</span></a>
-            </div>
-        --}}
-@include('customer.partials.navigation')
-
+        @include('customer.partials.navigation')
         <main class="customer-booking-shell confirmation-shell">
             <section class="confirmation-hero" aria-labelledby="confirmation-title">
-                <div class="confirmation-mark" aria-hidden="true">✓</div>
-                <span class="section-kicker">Preview confirmation</span>
-                <h1 id="confirmation-title">Your repair request<br><em>is ready to go.</em></h1>
-                <p>We have everything needed to prepare your booking. The real submission and payment connection will be added in the backend phase.</p>
+                <div class="confirmation-mark" aria-hidden="true">&#10003;</div>
+                <span class="section-kicker">Booking saved</span>
+                <h1 id="confirmation-title">Your repair request<br><em>is on its way.</em></h1>
+                <p>Your booking has been saved. The workshop will review the request and its payment status will update after PayMongo confirms payment.</p>
             </section>
 
             <section class="confirmation-card" aria-labelledby="booking-reference-title">
-                <div class="confirmation-card-head"><span>Booking reference</span><strong id="booking-reference-title" data-booking-reference>PDL-PREVIEW-2048</strong></div>
+                <div class="confirmation-card-head"><span>Booking reference</span><strong id="booking-reference-title">{{ $booking->reference }}</strong></div>
                 <div class="confirmation-details">
-                    <div><span>Service</span><strong data-confirmation-service>Loading…</strong></div>
-                    <div><span>Appointment</span><strong data-confirmation-date>Loading…</strong></div>
-                    <div><span>Customer</span><strong data-confirmation-customer>Loading…</strong></div>
-                    <div><span>Estimated total</span><strong data-confirmation-price>₱500</strong></div>
+                    <div><span>Service</span><strong>{{ $booking->service->name }}</strong></div>
+                    <div><span>Appointment</span><strong>{{ $booking->appointment_at->setTimezone(config('booking.timezone'))->format('D, M j · g:i A') }}</strong></div>
+                    <div><span>Customer</span><strong>{{ $booking->customer_name }}</strong></div>
+                    <div><span>Estimated total</span><strong>&#8369;{{ number_format((float) $booking->service_price, 2) }}</strong></div>
                 </div>
-                <div class="confirmation-status"><span class="status-dot"></span><div><strong>Payment pending</strong><p>Payment options will appear after the backend connection is available.</p></div></div>
+                <div class="confirmation-status">
+                    <span class="status-dot"></span>
+                    <div><strong>Payment {{ $booking->payment_status }}</strong><p>Booking status: {{ ucfirst($booking->booking_status) }}.</p></div>
+                </div>
             </section>
 
+            @if ($errors->any())
+                <div class="review-form-message" role="alert">{{ $errors->first() }}</div>
+            @endif
+
             <nav class="booking-steps booking-steps-after-content" aria-label="Booking progress">
-                <span class="booking-step is-complete"><b>✓</b><span>Service</span></span>
-                <span class="booking-step is-complete"><b>✓</b><span>Schedule</span></span>
-                <span class="booking-step is-complete"><b>✓</b><span>Review</span></span>
+                <span class="booking-step is-complete"><b>&#10003;</b><span>Service</span></span>
+                <span class="booking-step is-complete"><b>&#10003;</b><span>Schedule</span></span>
+                <span class="booking-step is-complete"><b>&#10003;</b><span>Review</span></span>
                 <span class="booking-step is-active"><b>04</b><span>Confirmation</span></span>
             </nav>
 
             <div class="confirmation-actions">
-                <a class="booking-next" href="{{ route('customer.book') }}">Start another booking <span aria-hidden="true">→</span></a>
-                <a class="customer-return-link" href="{{ route('customer.dashboard') }}">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 6-6 6 6 6M4 12h16"/></svg>
-                    Return to dashboard
-                </a>
+                @if ($booking->payment_status !== 'paid')
+                    <form method="POST" action="{{ route('customer.checkout', ['reference' => $booking->reference]) }}">
+                        @csrf
+                        <button class="booking-next" type="submit">Pay with PayMongo <span aria-hidden="true">&#8599;</span></button>
+                    </form>
+                @endif
+                <a class="booking-next" href="{{ route('customer.book') }}">Start another booking <span aria-hidden="true">&#8594;</span></a>
+                <a class="confirmation-secondary" href="{{ route('customer.dashboard') }}">Return to dashboard</a>
             </div>
-
-            <div class="booking-preview-note" role="note"><span aria-hidden="true">✦</span><p>This is a frontend-only preview. No booking was saved and no payment was processed.</p></div>
         </main>
     </body>
 </html>

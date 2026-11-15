@@ -41,19 +41,17 @@
                 <p>Choose a service below. You’ll pick an available appointment time in the next step.</p>
             </section>
 
-            <form class="service-selection" data-service-form>
+            <form class="service-selection" data-service-form method="POST" action="{{ route('customer.book.service') }}">
+                @csrf
                 <div class="service-grid" role="radiogroup" aria-label="Repair services">
-                    @foreach ([
-                        ['key' => 'brake-inspection', 'number' => '01', 'name' => 'Brake inspection', 'description' => 'Check stopping power, alignment, and pad wear.', 'duration' => '45 min', 'price' => '₱500', 'tone' => 'mint'],
-                        ['key' => 'wheel-alignment', 'number' => '02', 'name' => 'Wheel alignment', 'description' => 'Bring your wheels back to a smooth, steady ride.', 'duration' => '60 min', 'price' => '₱650', 'tone' => 'lime'],
-                        ['key' => 'full-tune-up', 'number' => '03', 'name' => 'Full tune-up', 'description' => 'A complete check and adjustment for everyday riding.', 'duration' => '90 min', 'price' => '₱1,200', 'tone' => 'blue'],
-                        ['key' => 'flat-tire-repair', 'number' => '04', 'name' => 'Flat tire repair', 'description' => 'Repair or replace the tube and get rolling again.', 'duration' => '30 min', 'price' => '₱350', 'tone' => 'peach'],
-                    ] as $service)
-                        <label class="service-card service-card-{{ $service['tone'] }}" data-service-card>
-                            <input type="radio" name="service" value="{{ $service['key'] }}" data-service-input>
-                            <span class="service-card-top"><span>{{ $service['number'] }}</span><i aria-hidden="true">↗</i></span>
+                    @foreach ($services as $service)
+                        @php($serviceTone = ['mint', 'lime', 'blue', 'peach'][$loop->index % 4])
+                        @php($serviceNumber = str_pad((string) $loop->iteration, 2, '0', STR_PAD_LEFT))
+                        <label class="service-card service-card-{{ $serviceTone }}" data-service-card>
+                            <input type="radio" name="service_id" value="{{ $service->id }}" data-service-input>
+                            <span class="service-card-top"><span>{{ $serviceNumber }}</span><i aria-hidden="true">&#8599;</i></span>
                             <span class="service-card-icon" aria-hidden="true">
-                                @switch($service['key'])
+                                @switch($service->slug)
                                     @case('brake-inspection')
                                         <svg viewBox="0 0 48 48"><circle cx="23" cy="24" r="13"></circle><path d="M29 13h7v22h-7M36 18h4M36 30h4"></path><path d="M23 17v14M16 24h14"></path></svg>
                                         @break
@@ -67,10 +65,10 @@
                                         <svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="14"></circle><circle cx="24" cy="24" r="5"></circle><path d="M24 10v5M24 33v5M10 24h5M33 24h5"></path><circle cx="31" cy="17" r="1.8"></circle><path d="M29 31l4 4"></path></svg>
                                 @endswitch
                             </span>
-                            <strong>{{ $service['name'] }}</strong>
-                            <span class="service-card-description">{{ $service['description'] }}</span>
-                            <span class="service-card-meta"><small>{{ $service['duration'] }}</small><b>{{ $service['price'] }}</b></span>
-                            <span class="service-card-check" aria-hidden="true">✓</span>
+                            <strong>{{ $service->name }}</strong>
+                            <span class="service-card-description">{{ $service->description }}</span>
+                            <span class="service-card-meta"><small>{{ $service->duration_minutes }} min</small><b>&#8369;{{ number_format((float) $service->price, 0) }}</b></span>
+                            <span class="service-card-check" aria-hidden="true">&#10003;</span>
                         </label>
                     @endforeach
                 </div>
@@ -84,16 +82,11 @@
 
                 <div class="booking-action-bar">
                     <p class="selection-message" data-selection-message role="status" aria-live="polite">Select a service to continue.</p>
-                    <button class="booking-next" type="button" data-next-step disabled>
+                    <button class="booking-next" type="submit" data-next-step disabled>
                         Continue to schedule <span aria-hidden="true">→</span>
                     </button>
                 </div>
             </form>
-
-            <div class="booking-preview-note" role="note">
-                <span aria-hidden="true">✦</span>
-                <p>This is a frontend preview using sample services. Booking persistence and availability will be connected in the backend phase.</p>
-            </div>
         </main>
     </body>
 </html>

@@ -12,12 +12,11 @@ if (serviceForm) {
         });
     });
 
-    nextButton.addEventListener('click', () => {
+    serviceForm.addEventListener('submit', (event) => {
         const selected = serviceForm.querySelector('[data-service-input]:checked');
+        if (selected) return;
 
-        if (!selected) return;
-
-        window.sessionStorage.setItem('pedalya.selectedService', selected.value);
-        window.pedalyaAdvanceBooking?.('/book/schedule');
+        event.preventDefault();
+        message.textContent = 'Select a service before continuing.';
     });
 }

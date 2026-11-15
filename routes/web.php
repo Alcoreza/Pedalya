@@ -3,11 +3,15 @@
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Customer\ProfileController;
+use App\Http\Controllers\Customer\BookingFlowController;
+use App\Http\Controllers\Customer\PayMongoCheckoutController;
+use App\Http\Controllers\Customer\PaymentResultController;
 use App\Http\Controllers\Manager\ActivityController;
 use App\Http\Controllers\Manager\BookingsController;
 use App\Http\Controllers\Manager\DashboardController;
 use App\Http\Controllers\Manager\RepairsController;
 use App\Http\Controllers\Manager\ScheduleController;
+use App\Http\Controllers\Webhooks\PayMongoWebhookController;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
@@ -18,10 +22,21 @@ Route::post('/login', [LoginController::class, 'store'])->name('login.store');
 Route::view('/register', 'auth.register')->name('register');
 Route::post('/register', [RegisterController::class, 'store'])->name('register.store');
 
-Route::view('/book', 'customer.book')->name('customer.book');
-Route::view('/book/schedule', 'customer.schedule')->name('customer.schedule');
-Route::view('/book/review', 'customer.review')->name('customer.review');
-Route::view('/book/confirmation', 'customer.confirmation')->name('customer.confirmation');
+Route::middleware(['auth', 'role:customer'])->group(function () {
+    Route::get('/book', [BookingFlowController::class, 'services'])->name('customer.book');
+    Route::post('/book/service', [BookingFlowController::class, 'chooseService'])->name('customer.book.service');
+    Route::get('/book/schedule', [BookingFlowController::class, 'schedule'])->name('customer.schedule');
+    Route::post('/book/schedule', [BookingFlowController::class, 'saveSchedule'])->name('customer.schedule.store');
+    Route::get('/book/review', [BookingFlowController::class, 'review'])->name('customer.review');
+    Route::post('/book/review', [BookingFlowController::class, 'store'])->name('customer.review.store');
+    Route::get('/book/confirmation/{reference}', [BookingFlowController::class, 'confirmation'])->name('customer.confirmation');
+    Route::post('/book/confirmation/{reference}/checkout', [PayMongoCheckoutController::class, 'start'])->name('customer.checkout');
+    Route::get('/payments/{payment}/success', [PaymentResultController::class, 'success'])->name('customer.payment.success');
+    Route::get('/payments/{payment}/failed', [PaymentResultController::class, 'failed'])->name('customer.payment.failed');
+});
+
+Route::post('/webhooks/paymongo', PayMongoWebhookController::class)->name('webhooks.paymongo');
+
 Route::view('/customer/bookings', 'customer.bookings')->name('customer.bookings');
 Route::redirect('/customer', '/customer/dashboard');
 Route::view('/customer/dashboard', 'customer.dashboard')->name('customer.dashboard');
@@ -31,8 +46,6 @@ Route::view('/customer/bookings/{booking}', 'customer.booking-detail')->name('cu
 Route::redirect('/customer/repairs', '/customer/bookings')->name('customer.repairs');
 Route::get('/customer/repairs/{booking}', fn (string $booking) => redirect()->route('customer.booking.detail', $booking))->name('customer.repair');
 Route::view('/customer/bookings/{booking}/payment', 'customer.payment')->name('customer.payment');
-Route::view('/payments/{payment}/success', 'customer.payment-result', ['result' => 'success'])->name('customer.payment.success');
-Route::view('/payments/{payment}/failed', 'customer.payment-result', ['result' => 'failed'])->name('customer.payment.failed');
 
 Route::prefix('manager')->name('manager.')->middleware(['auth', 'role:manager'])->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
