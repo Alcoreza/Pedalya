@@ -30,7 +30,7 @@
                 </form>
                 <aside class="profile-side-panel">
                     <span class="section-kicker">Account snapshot</span><h2>Ready for your next ride.</h2><p>Your saved contact details are linked to your signed-in account.</p>
-                    <div class="profile-side-detail"><span>Member since</span><strong>March 2026</strong></div><div class="profile-side-detail"><span>Bookings</span><strong>03 repair visits</strong></div>
+                    <div class="profile-side-detail"><span>Member since</span><strong>{{ $user->created_at?->format('F Y') ?? 'Unknown' }}</strong></div><div class="profile-side-detail"><span>Bookings</span><strong>{{ $user->bookings_count }} {{ $user->bookings_count === 1 ? 'repair visit' : 'repair visits' }}</strong></div>
                     <a class="customer-return-link" href="{{ route('customer.dashboard') }}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 6-6 6 6 6M4 12h16"/></svg>Back to dashboard</a>
                 </aside>
             </div>

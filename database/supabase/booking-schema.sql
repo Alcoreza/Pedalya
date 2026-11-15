@@ -5,6 +5,9 @@
 ALTER TABLE public.users
     ALTER COLUMN mobile_number TYPE text USING mobile_number::text;
 
+ALTER TABLE public.users
+    ADD COLUMN IF NOT EXISTS created_at timestamptz NOT NULL DEFAULT now();
+
 CREATE UNIQUE INDEX IF NOT EXISTS users_email_unique
     ON public.users (email);
 

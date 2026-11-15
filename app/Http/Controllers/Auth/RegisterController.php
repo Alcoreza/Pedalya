@@ -24,6 +24,7 @@ class RegisterController extends Controller
             'email' => $validated['email'],
             'password' => $validated['password'],
             'role' => 'customer',
+            'created_at' => now(),
         ]);
 
         return redirect()

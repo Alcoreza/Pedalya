@@ -12,7 +12,9 @@ class ProfileController extends Controller
 {
     public function edit(Request $request): View
     {
-        return view('customer.profile', ['user' => $request->user()]);
+        $user = $request->user()->loadCount('bookings');
+
+        return view('customer.profile', ['user' => $user]);
     }
 
     public function update(Request $request): RedirectResponse
