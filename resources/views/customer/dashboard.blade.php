@@ -66,8 +66,13 @@
             </article>
             <article class="dashboard-panel dashboard-location-panel">
                 <div class="dashboard-panel-heading"><div><span>Workshop</span><h2>Your repair destination</h2></div><span class="appointment-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 21s7-6.1 7-12a7 7 0 1 0-14 0c0 5.9 7 12 7 12Z"></path><circle cx="12" cy="9" r="2.25"></circle></svg></span></div>
-                <div class="dashboard-mini-map" role="group" aria-label="Map of the Pedalya Bike Repair workshop"><iframe src="https://www.google.com/maps?q=Pedalya%20Bike%20Repair%2C%20123%20Sample%20Street%2C%20Quezon%20City&amp;output=embed" title="Pedalya Bike Repair workshop" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe><span>Pedalya Bike Repair</span></div>
-                <p><strong>123 Sample Street</strong><span>Quezon City</span></p>
+                <div class="dashboard-mini-map" role="group" aria-label="Map of the Pedalya Bike Repair workshop"><iframe
+    src="https://www.google.com/maps/embed?pb=!4v1794719640857!6m8!1m7!1s-NHNApbTEcUDyHvdniN88A!2m2!1d14.11882973585545!2d121.556903219214!3f38.98520599254551!4f-18.004327157487083!5f0.7820865974627469"
+    title="Pedalya Bike Repair workshop"
+    loading="lazy"
+    referrerpolicy="strict-origin-when-cross-origin">
+    </iframe><span>Pedalya Bike Repair</span></div>
+                <p><strong>Lucban-Sampaloc RD</strong><span>Lucban, Quezon</span></p>
                 <a href="{{ route('customer.bookings') }}">View your bookings <span aria-hidden="true">↗</span></a>
             </article>
         </section>
