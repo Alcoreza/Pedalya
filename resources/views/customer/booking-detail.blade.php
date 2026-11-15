@@ -76,15 +76,15 @@
 
                     <article class="detail-card location-card" id="workshop-location">
                         <div class="detail-card-heading"><div><span>Plan your visit</span><h2>Find the workshop</h2></div></div>
-                        <div class="map-preview" role="img" aria-label="Illustrative workshop map, not an exact location">
+                        <div class="map-preview" role="group" aria-label="Google Maps view of the Pedalya Bike Repair workshop">
+                            <iframe src="https://www.google.com/maps/embed?pb=!4v1794719640857!6m8!1m7!1s-NHNApbTEcUDyHvdniN88A!2m2!1d14.11882973585545!2d121.556903219214!3f38.98520599254551!4f-18.004327157487083!5f0.7820865974627469" title="Pedalya Bike Repair workshop in Lucban, Quezon" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
                             <div class="map-grid"></div><span class="map-road map-road-one"></span><span class="map-road map-road-two"></span>
                             <span class="map-pin" aria-hidden="true">⌖</span><span class="map-label">Pedalya workshop</span>
                         </div>
                         <div class="location-details">
-                            <div><strong>Pedalya Bike Repair</strong><span>123 Sample Street, Quezon City</span></div>
-                            <a href="https://www.google.com/maps/search/?api=1&query=Pedalya+Bike+Repair" target="_blank" rel="noopener noreferrer">Open in Google Maps <span aria-hidden="true">↗</span></a>
+                            <div><strong>Pedalya Bike Repair</strong><span>Lucban-Sampaloc Road, Lucban, Quezon</span></div>
+                            <a href="https://www.google.com/maps/search/?api=1&amp;query=14.11882973585545%2C121.556903219214" target="_blank" rel="noopener noreferrer">Open in Google Maps <span aria-hidden="true">↗</span></a>
                         </div>
-                        <p class="location-preview-note">Sample address and map preview.</p>
                     </article>
                 </div>
 
