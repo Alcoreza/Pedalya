@@ -31,9 +31,10 @@
                     @endif
                 </div>
                 @if ($upcomingBooking)
+                    @php($upcomingAppointmentAt = $upcomingBooking->appointment_at->setTimezone(config('booking.timezone')))
                     <div class="dashboard-appointment">
-                        <time class="dashboard-date" datetime="{{ $upcomingBooking->appointment_at->toDateString() }}"><small>{{ $upcomingBooking->appointment_at->format('D') }}</small><strong class="dashboard-date-number">{{ $upcomingBooking->appointment_at->format('d') }}</strong><span>{{ $upcomingBooking->appointment_at->format('M Y') }}</span></time>
-                        <div><span class="dashboard-reference">{{ $upcomingBooking->reference }}</span><h2>{{ $upcomingBooking->service?->name ?? 'Repair service' }}</h2><p>{{ $upcomingBooking->appointment_at->format('g:i A') }} · Pedalya Bike Repair</p></div>
+                        <time class="dashboard-date" datetime="{{ $upcomingAppointmentAt->toIso8601String() }}"><small>{{ $upcomingAppointmentAt->format('D') }}</small><strong class="dashboard-date-number">{{ $upcomingAppointmentAt->format('d') }}</strong><span>{{ $upcomingAppointmentAt->format('M Y') }}</span></time>
+                        <div><span class="dashboard-reference">{{ $upcomingBooking->reference }}</span><h2>{{ $upcomingBooking->service?->name ?? 'Repair service' }}</h2><p>{{ $upcomingAppointmentAt->format('g:i A') }} · Pedalya Bike Repair</p></div>
                     </div>
                     <div class="dashboard-card-footer"><span>{{ $upcomingBooking->booking_status === 'pending' && $upcomingBooking->processing_method === 'review_required' ? 'Payment after approval' : \Illuminate\Support\Str::headline($upcomingBooking->payment_status).' payment' }}</span><a href="{{ route('customer.booking.detail', $upcomingBooking->reference) }}">View booking details <span aria-hidden="true">↗</span></a></div>
                 @else
@@ -54,9 +55,10 @@
                 <div class="activity-intro"><div><span>Activity</span><h2>Booking activity</h2><p>Your latest repair bookings.</p></div><a href="{{ route('customer.bookings') }}"><span class="activity-link-label">View all</span></a></div>
                 <div class="activity-feed" aria-label="Recent booking activity">
                     @forelse ($recentBookings as $booking)
+                        @php($localAppointmentAt = $booking->appointment_at->setTimezone(config('booking.timezone')))
                         <a class="dashboard-booking-row" href="{{ route('customer.booking.detail', $booking->reference) }}">
                             <div class="dashboard-row-icon {{ $booking->booking_status === 'completed' ? 'row-icon-complete' : '' }}" aria-hidden="true"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="14"></circle><circle cx="24" cy="24" r="4"></circle><path d="M24 10v10M24 28v10M10 24h10M28 24h10"></path></svg></div>
-                            <div class="dashboard-booking-copy"><strong>{{ $booking->service?->name ?? 'Repair service' }}</strong><span class="dashboard-booking-meta"><span class="dashboard-booking-reference">{{ $booking->reference }}</span><span class="dashboard-booking-divider" aria-hidden="true">·</span><span>{{ $booking->appointment_at->format('M d, g:i A') }}</span></span></div>
+                            <div class="dashboard-booking-copy"><strong>{{ $booking->service?->name ?? 'Repair service' }}</strong><span class="dashboard-booking-meta"><span class="dashboard-booking-reference">{{ $booking->reference }}</span><span class="dashboard-booking-divider" aria-hidden="true">·</span><span>{{ $localAppointmentAt->format('M d, g:i A') }}</span></span></div>
                             <span class="record-status {{ $booking->booking_status === 'completed' ? 'status-success' : ($booking->booking_status === 'confirmed' ? 'status-brand' : 'status-pending') }}"><i></i>{{ $booking->booking_status === 'pending' && $booking->processing_method === 'review_required' ? 'Awaiting approval' : \Illuminate\Support\Str::headline($booking->booking_status) }}</span>
                         </a>
                     @empty

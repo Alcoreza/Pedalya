@@ -35,6 +35,7 @@
         <section class="booking-list" aria-label="Your bookings" data-booking-list>
             @forelse ($bookings as $booking)
                 @php
+                    $appointmentAt = $booking->appointment_at->setTimezone(config('booking.timezone'));
                     $isCompleted = $booking->booking_status === 'completed';
                     $bookingLabel = $booking->booking_status === 'pending' && $booking->processing_method === 'review_required'
                         ? 'Awaiting approval'
@@ -46,7 +47,7 @@
                 <article class="booking-record" data-booking-card data-group="{{ $isCompleted ? 'completed' : 'active' }}">
                     <div class="booking-record-main">
                         <div class="booking-record-title"><span class="booking-reference">{{ $booking->reference }}</span><h2>{{ $booking->service?->name ?? 'Repair service' }}</h2></div>
-                        <div class="booking-date"><span>Appointment</span><strong>{{ $booking->appointment_at->format('D, M d') }}</strong><small>{{ $booking->appointment_at->format('g:i A') }}</small></div>
+                        <div class="booking-date"><span>Appointment</span><strong>{{ $appointmentAt->format('D, M d') }}</strong><small>{{ $appointmentAt->format('g:i A') }}</small></div>
                     </div>
                     <div class="booking-record-statuses" aria-label="Booking status details">
                         <div class="booking-status-item"><small>Booking</small><span class="record-status status-{{ $bookingTone }}"><i></i><span class="status-label">{{ $bookingLabel }}</span></span></div>
