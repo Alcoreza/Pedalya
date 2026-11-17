@@ -42,7 +42,12 @@
                         <div><dt>Duration</dt><dd>{{ $service->duration_minutes }} min</dd></div>
                         <div><dt>Estimated total</dt><dd class="summary-total">&#8369;{{ number_format((float) $service->price, 2) }}</dd></div>
                     </dl>
-                    <div class="summary-payment"><span>Payment status</span><strong>Pending</strong><small>PayMongo checkout starts after you confirm this booking.</small></div>
+                    @if ($requiresManagerReview)
+                        <div class="summary-payment" role="status"><span>Approval required</span><strong>This time is already booked</strong><small>Your request will go to the manager. You can pay if it is approved.</small></div>
+                    @else
+                        <div class="summary-payment" role="status"><span>Instant confirmation</span><strong>Your booking will be confirmed when you submit</strong><small>Maya checkout will be available right after confirmation.</small></div>
+                    @endif
+                    <div class="summary-payment"><span>Payment</span><strong>Not paid yet</strong><small>{{ $requiresManagerReview ? 'Payment is unavailable until the manager approves your request.' : 'Payment is the next step after confirmation.' }}</small></div>
                     <button class="booking-next review-submit" type="submit">Confirm booking <span aria-hidden="true">&#8594;</span></button>
                     <a class="customer-return-link" href="{{ route('customer.schedule') }}">
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 6-6 6 6 6M4 12h16"/></svg>

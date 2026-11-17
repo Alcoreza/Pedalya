@@ -5,7 +5,7 @@ return [
     | Workshop scheduling defaults. These can move to database-backed manager
     | settings later without changing the policy output or booking page.
     */
-    'default_capacity' => (int) env('BOOKING_DEFAULT_CAPACITY', 2),
+    'default_capacity' => (int) env('BOOKING_DEFAULT_CAPACITY', 1),
     'default_duration_minutes' => (int) env('BOOKING_DEFAULT_DURATION', 60),
     'timezone' => env('BOOKING_TIMEZONE', 'Asia/Manila'),
     'opening_time' => env('BOOKING_OPENING_TIME', '09:00'),

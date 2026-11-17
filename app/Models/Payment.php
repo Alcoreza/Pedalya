@@ -15,6 +15,7 @@ class Payment extends Model
         'provider_checkout_session_id',
         'provider_payment_intent_id',
         'provider_payment_id',
+        'provider_request_reference_number',
         'checkout_url',
         'amount_minor',
         'currency',

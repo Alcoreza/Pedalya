@@ -30,9 +30,9 @@ class PaymentResultController extends Controller
         $status = $booking->payment_status;
         $paid = $status === 'paid';
         $message = match (true) {
-            $paid => 'PayMongo confirmed this payment. Your booking payment is complete.',
+            $paid => 'Maya confirmed this payment. Your booking payment is complete.',
             $returnState === 'failed' => 'Checkout was not completed. Your booking is saved and you can try payment again.',
-            default => 'PayMongo is confirming the result. This page will show paid after the verified webhook is received.',
+            default => 'Maya is confirming the result. This page will show paid after the payment webhook is received.',
         };
 
         return view('customer.payment-result', [

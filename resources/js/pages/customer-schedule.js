@@ -13,6 +13,7 @@ if (scheduleForm) {
     const monthLabel = schedulePanel.querySelector('[data-calendar-month]');
     const calendarDay = schedulePanel.querySelector('[data-calendar-day]');
     const openSlots = schedulePanel.querySelector('[data-open-slots]');
+    const reviewSlots = schedulePanel.querySelector('[data-review-slots]');
     const optionsElement = schedulePanel.querySelector('[data-schedule-options]');
     const dateOptions = JSON.parse(optionsElement?.textContent ?? '[]');
     const optionsByDate = new Map(dateOptions.map((option) => [option.key, option]));
@@ -32,7 +33,9 @@ if (scheduleForm) {
         button.setAttribute('aria-pressed', 'true');
         selectedTime.value = button.dataset.slot;
         nextButton.disabled = false;
-        message.textContent = 'Time selected. Continue when you’re ready.';
+        message.textContent = button.dataset.review === 'true'
+            ? 'This time is already booked. Your request will need manager approval before payment.'
+            : 'Your booking will be confirmed immediately. Payment comes next.';
         saveSelection();
     };
 
@@ -52,13 +55,15 @@ if (scheduleForm) {
         option.slots.forEach((slot) => {
             const button = document.createElement('button');
             button.className = 'time-slot';
+            if (slot.requires_review) button.classList.add('is-review');
             button.type = 'button';
             button.dataset.slot = slot.time;
+            button.dataset.review = String(Boolean(slot.requires_review));
             button.setAttribute('aria-pressed', 'false');
             button.append(document.createTextNode(slot.label));
 
             const availability = document.createElement('span');
-            availability.textContent = 'Available';
+            availability.textContent = slot.requires_review ? 'Approval required' : 'Instant confirmation';
             button.append(availability);
             slotGrid.append(button);
         });
@@ -83,7 +88,8 @@ if (scheduleForm) {
         dateLabel.textContent = option.long_label;
         monthLabel.textContent = option.month_label;
         calendarDay.textContent = option.day;
-        openSlots.textContent = String(option.slots.length);
+        openSlots.textContent = String(option.auto_confirm_slots ?? option.slots.filter((slot) => !slot.requires_review).length);
+        reviewSlots.textContent = String(option.review_slots ?? option.slots.filter((slot) => slot.requires_review).length);
         renderSlots(option);
         saveSelection();
     });

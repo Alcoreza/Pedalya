@@ -14,7 +14,14 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias(['role' => EnsureUserHasRole::class]);
-        $middleware->validateCsrfTokens(except: ['webhooks/paymongo']);
+        $middleware->validateCsrfTokens(except: ['webhooks/maya']);
+
+        // ngrok terminates HTTPS and forwards requests to the local HTTP server.
+        // Trust forwarded headers in local development so generated asset and
+        // callback URLs use the public HTTPS scheme.
+        if (env('APP_ENV', 'production') === 'local') {
+            $middleware->trustProxies(at: '*');
+        }
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

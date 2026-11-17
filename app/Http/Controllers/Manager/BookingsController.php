@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Manager;
 
 use App\Http\Controllers\Controller;
+use App\Models\Booking;
 use App\Services\Bookings\BookingCapacityPolicy;
+use App\Services\GoogleCalendarService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,9 +17,8 @@ class BookingsController extends Controller
 {
     public function index(Request $request, BookingCapacityPolicy $capacityPolicy): View
     {
-        $managerName = auth()->user()?->name ?? 'Elmer Daniel';
-        $bookings = $capacityPolicy->decorate($this->recordsWithOverrides($request));
-
+        $managerName = $request->user()?->name ?? 'Manager';
+        $bookings = $capacityPolicy->decorate($this->bookingRecords());
         $filters = [
             'search' => trim((string) $request->string('search')),
             'booking_status' => (string) $request->string('booking_status'),
@@ -30,17 +31,10 @@ class BookingsController extends Controller
             ->when($filters['search'] !== '', function (Collection $records) use ($filters): Collection {
                 $search = Str::lower($filters['search']);
 
-                return $records->filter(fn (array $booking): bool => Str::contains(
-                    Str::lower(implode(' ', [
-                        $booking['reference'],
-                        $booking['customer']['name'],
-                        $booking['customer']['email'],
-                        $booking['service'],
-                        $booking['notes'] ?? '',
-                        $booking['processing_method']['label'],
-                    ])),
-                    $search,
-                ));
+                return $records->filter(fn (array $booking): bool => Str::contains(Str::lower(implode(' ', [
+                    $booking['reference'], $booking['customer']['name'], $booking['customer']['email'],
+                    $booking['service'], $booking['notes'] ?? '', $booking['processing_method']['label'],
+                ])), $search);
             })
             ->when($filters['booking_status'] !== '', fn (Collection $records): Collection => $records->where('booking_status.key', $filters['booking_status']))
             ->when($filters['processing_method'] !== '', fn (Collection $records): Collection => $records->where('processing_method.key', $filters['processing_method']))
@@ -49,19 +43,11 @@ class BookingsController extends Controller
             ->values();
 
         $selectedReference = (string) $request->string('booking');
-        $selectedBooking = $bookings->firstWhere('reference', $selectedReference)
-            ?? $filteredBookings->first()
-            ?? $bookings->first();
+        $selectedBooking = $bookings->firstWhere('reference', $selectedReference) ?? $filteredBookings->first() ?? $bookings->first();
 
         return view('manager.bookings', [
-            'manager' => [
-                'name' => $managerName,
-                'initials' => $this->initials($managerName),
-                'role' => 'Manager',
-            ],
-            'navigation' => [
-                'pending_bookings' => $bookings->where('booking_status.key', 'review_required')->count(),
-            ],
+            'manager' => ['name' => $managerName, 'initials' => $this->initials($managerName), 'role' => 'Manager'],
+            'navigation' => ['pending_bookings' => $bookings->where('booking_status.key', 'review_required')->count()],
             'summary' => [
                 'all' => $bookings->count(),
                 'automatic' => $bookings->where('booking_status.key', 'confirmed')->where('processing_method.key', 'automatic')->count(),
@@ -77,168 +63,70 @@ class BookingsController extends Controller
             ],
             'bookings' => $filteredBookings,
             'selectedBooking' => $selectedBooking,
-            'defaultCapacity' => (int) config('booking.default_capacity', 2),
+            'defaultCapacity' => (int) config('booking.default_capacity', 1),
         ]);
     }
 
-    public function decide(Request $request, string $booking): RedirectResponse
+    public function decide(Request $request, string $booking, GoogleCalendarService $googleCalendar): RedirectResponse
     {
-        $validated = $request->validate([
-            'decision' => ['required', Rule::in(['confirmed', 'rejected'])],
+        $validated = $request->validate(['decision' => ['required', Rule::in(['confirmed', 'rejected'])]]);
+        $record = Booking::query()->where('reference', $booking)->firstOrFail();
+        abort_unless($record->processing_method === 'review_required' && $record->booking_status === 'pending', 422, 'This booking no longer requires review.');
+
+        $record->update([
+            'booking_status' => $validated['decision'],
+            'processing_method' => 'manual',
         ]);
 
-        $record = $this->recordsWithOverrides($request)->firstWhere('reference', $booking);
-        abort_unless($record, 404);
-        abort_unless($record['booking_status']['key'] === 'review_required', 422, 'This booking no longer requires review.');
+        if ($validated['decision'] === 'confirmed') {
+            $googleCalendar->syncBooking($record);
+        }
 
-        $overrides = $request->session()->get('manager_booking_overrides', []);
-        $isConfirmed = $validated['decision'] === 'confirmed';
-        $managerName = auth()->user()?->name ?? 'Elmer Daniel';
-
-        // Temporary session persistence keeps the frontend workflow testable.
-        // A production command handler can persist this same payload without
-        // changing the Blade view contract.
-        $overrides[$booking] = [
-            'booking_status' => [
-                'key' => $validated['decision'],
-                'label' => $isConfirmed ? 'Confirmed' : 'Rejected',
-            ],
-            'processing_method' => [
-                'key' => 'manual',
-                'label' => 'Manager reviewed',
-            ],
-            'calendar_status' => [
-                'key' => $isConfirmed ? 'pending' : 'not_applicable',
-                'label' => $isConfirmed ? 'Pending sync' : 'Not applicable',
-            ],
-            'reviewed_by' => $managerName,
-            'reviewed_at' => now(),
-        ];
-
-        $request->session()->put('manager_booking_overrides', $overrides);
-
-        return redirect()
-            ->route('manager.bookings.index', ['booking' => $booking])
-            ->with('booking_notice', $isConfirmed
-                ? "{$booking} was confirmed by {$managerName}. Calendar synchronization will continue separately."
-                : "{$booking} was rejected and will not create a calendar event.");
-    }
-
-    private function recordsWithOverrides(Request $request): Collection
-    {
-        $overrides = $request->session()->get('manager_booking_overrides', []);
-
-        return $this->bookingRecords()->map(fn (array $booking): array => array_replace(
-            $booking,
-            $overrides[$booking['reference']] ?? [],
-        ));
+        $managerName = $request->user()?->name ?? 'Manager';
+        return redirect()->route('manager.bookings.index', ['booking' => $booking])->with(
+            'booking_notice',
+            $validated['decision'] === 'confirmed'
+                ? "{$booking} was confirmed by {$managerName}."
+                : "{$booking} was rejected by {$managerName}."
+        );
     }
 
     private function bookingRecords(): Collection
     {
-        $sharedSlot = now()->addDay()->setTime(13, 0, 0);
+        return Booking::query()->with(['service', 'payment'])->latest('created_at')->get()
+            ->map(function (Booking $booking): array {
+                $reviewRequired = $booking->processing_method === 'review_required' && $booking->booking_status === 'pending';
+                $bookingKey = $reviewRequired ? 'review_required' : $booking->booking_status;
+                $processingKey = $reviewRequired ? 'review_required' : ($booking->processing_method ?: 'automatic');
+                $paymentKey = $booking->payment_status === 'paid' ? 'successful' : $booking->payment_status;
+                $calendarKey = $booking->calendar_status ?: 'not_applicable';
+                $name = $booking->customer_name;
 
-        return collect([
-            [
-                'reference' => 'PDL-1048',
-                'customer' => ['name' => 'Ana Reyes', 'initials' => 'AR', 'email' => 'ana.reyes@example.com', 'phone' => '+63 917 000 1048'],
-                'service' => 'Brake inspection',
-                'notes' => 'The front brake squeals under light pressure and feels weak when stopping downhill.',
-                'submitted_at' => now()->subMinutes(12),
-                'appointment_at' => $sharedSlot->copy(),
-                'booking_status' => ['key' => 'review_required', 'label' => 'Schedule review'],
-                'processing_method' => ['key' => 'review_required', 'label' => 'Schedule review'],
-                'review_reason' => 'capacity_reached',
-                'payment_status' => ['key' => 'pending', 'label' => 'Pending'],
-                'calendar_status' => ['key' => 'not_applicable', 'label' => 'Not applicable'],
-                'repair_status' => null,
-                'calendar_event_id' => null,
-            ],
-            [
-                'reference' => 'PDL-1047',
-                'customer' => ['name' => 'Marco Lim', 'initials' => 'ML', 'email' => 'marco.lim@example.com', 'phone' => '+63 917 000 1047'],
-                'service' => 'Wheel alignment',
-                'notes' => 'The front wheel pulls slightly to the left and starts to wobble at higher speed.',
-                'submitted_at' => now()->subMinutes(38),
-                'appointment_at' => $sharedSlot->copy(),
-                'booking_status' => ['key' => 'confirmed', 'label' => 'Confirmed'],
-                'processing_method' => ['key' => 'automatic', 'label' => 'Auto-confirmed'],
-                'review_reason' => null,
-                'payment_status' => ['key' => 'pending', 'label' => 'Pending'],
-                'calendar_status' => ['key' => 'pending', 'label' => 'Pending sync'],
-                'repair_status' => null,
-                'calendar_event_id' => null,
-            ],
-            [
-                'reference' => 'PDL-1046',
-                'customer' => ['name' => 'Bea Cruz', 'initials' => 'BC', 'email' => 'bea.cruz@example.com', 'phone' => '+63 917 000 1046'],
-                'service' => 'General tune-up',
-                'notes' => 'The gears skip between third and fourth, especially while climbing.',
-                'submitted_at' => now()->subHours(2),
-                'appointment_at' => $sharedSlot->copy(),
-                'booking_status' => ['key' => 'confirmed', 'label' => 'Confirmed'],
-                'processing_method' => ['key' => 'automatic', 'label' => 'Auto-confirmed'],
-                'review_reason' => null,
-                'payment_status' => ['key' => 'successful', 'label' => 'Successful'],
-                'calendar_status' => ['key' => 'synchronized', 'label' => 'Synchronized'],
-                'repair_status' => null,
-                'calendar_event_id' => 'gcal_pdl_1046',
-            ],
-            [
-                'reference' => 'PDL-1045',
-                'customer' => ['name' => 'Nico Santos', 'initials' => 'NS', 'email' => 'nico.santos@example.com', 'phone' => '+63 917 000 1045'],
-                'service' => 'Chain replacement',
-                'notes' => null,
-                'submitted_at' => now()->subHours(4),
-                'appointment_at' => now()->addDays(2)->setTime(9, 30, 0),
-                'booking_status' => ['key' => 'confirmed', 'label' => 'Confirmed'],
-                'processing_method' => ['key' => 'automatic', 'label' => 'Auto-confirmed'],
-                'review_reason' => null,
-                'payment_status' => ['key' => 'pending', 'label' => 'Pending'],
-                'calendar_status' => ['key' => 'failed', 'label' => 'Failed'],
-                'repair_status' => null,
-                'calendar_event_id' => null,
-            ],
-            [
-                'reference' => 'PDL-1044',
-                'customer' => ['name' => 'Ivan Co', 'initials' => 'IC', 'email' => 'ivan.co@example.com', 'phone' => '+63 917 000 1044'],
-                'service' => 'Wheel alignment',
-                'notes' => 'The rear wheel rubs against the brake pad after longer rides.',
-                'submitted_at' => now()->subDay(),
-                'appointment_at' => now()->addDays(3)->setTime(16, 0, 0),
-                'booking_status' => ['key' => 'rejected', 'label' => 'Rejected'],
-                'processing_method' => ['key' => 'manual', 'label' => 'Manager reviewed'],
-                'review_reason' => 'capacity_reached',
-                'payment_status' => ['key' => 'failed', 'label' => 'Failed'],
-                'calendar_status' => ['key' => 'not_applicable', 'label' => 'Not applicable'],
-                'repair_status' => null,
-                'calendar_event_id' => null,
-            ],
-            [
-                'reference' => 'PDL-1039',
-                'customer' => ['name' => 'Mia Flores', 'initials' => 'MF', 'email' => 'mia.flores@example.com', 'phone' => '+63 917 000 1039'],
-                'service' => 'General tune-up',
-                'notes' => 'Please check the loose crank and the clicking sound near the pedals.',
-                'submitted_at' => now()->subDays(4),
-                'appointment_at' => now()->subDay()->setTime(11, 0, 0),
-                'booking_status' => ['key' => 'confirmed', 'label' => 'Confirmed'],
-                'processing_method' => ['key' => 'automatic', 'label' => 'Auto-confirmed'],
-                'review_reason' => null,
-                'payment_status' => ['key' => 'successful', 'label' => 'Successful'],
-                'calendar_status' => ['key' => 'synchronized', 'label' => 'Synchronized'],
-                'repair_status' => ['key' => 'completed', 'label' => 'Completed'],
-                'calendar_event_id' => 'gcal_pdl_1039',
-            ],
-        ]);
+                return [
+                    'id' => $booking->id,
+                    'reference' => $booking->reference,
+                    'customer' => ['name' => $name, 'initials' => $this->initials($name), 'email' => $booking->customer_email, 'phone' => $booking->customer_mobile_number],
+                    'service' => $booking->service?->name ?? 'Repair service',
+                    'duration_minutes' => (int) $booking->duration_minutes,
+                    'capacity_per_slot' => (int) ($booking->service?->capacity_per_slot ?? config('booking.default_capacity', 1)),
+                    'notes' => $booking->bike_notes,
+                    'submitted_at' => $booking->created_at,
+                    'appointment_at' => $booking->appointment_at->setTimezone(config('booking.timezone')),
+                    'booking_status' => ['key' => $bookingKey, 'label' => ['review_required' => 'Schedule review', 'confirmed' => 'Confirmed', 'rejected' => 'Rejected', 'completed' => 'Completed', 'cancelled' => 'Cancelled', 'pending' => 'Pending'][$bookingKey] ?? ucfirst($bookingKey)],
+                    'processing_method' => ['key' => $processingKey, 'label' => ['review_required' => 'Schedule review', 'automatic' => 'Auto-confirmed', 'manual' => 'Manager reviewed'][$processingKey] ?? ucfirst($processingKey)],
+                    'review_reason' => $booking->review_reason,
+                    'payment_status' => ['key' => $paymentKey, 'label' => ['successful' => 'Successful', 'pending' => 'Pending', 'failed' => 'Failed'][$paymentKey] ?? ucfirst($paymentKey)],
+                    'calendar_status' => ['key' => $calendarKey, 'label' => ['not_applicable' => 'Not applicable', 'pending' => 'Pending sync', 'synchronized' => 'Synchronized', 'failed' => 'Failed'][$calendarKey] ?? ucfirst($calendarKey)],
+                    'repair_status' => null,
+                    'calendar_event_id' => $booking->calendar_event_id,
+                ];
+            })
+            ->filter(fn (array $booking): bool => in_array($booking['booking_status']['key'], ['review_required', 'confirmed', 'rejected'], true))
+            ->values();
     }
 
     private function initials(string $name): string
     {
-        return Str::of($name)
-            ->explode(' ')
-            ->filter()
-            ->take(2)
-            ->map(fn (string $part) => Str::upper(Str::substr($part, 0, 1)))
-            ->implode('');
+        return Str::of($name)->explode(' ')->filter()->take(2)->map(fn (string $part) => Str::upper(Str::substr($part, 0, 1)))->implode('');
     }
 }

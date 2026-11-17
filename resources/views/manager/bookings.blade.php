@@ -112,7 +112,7 @@
                         <span class="intro-kicker">Request control</span>
                         <h1 id="bookings-title">The booking<br><em>desk.</em></h1>
                     </div>
-                    <p>Bookings are confirmed automatically while capacity is available. Only schedule overlaps that exceed capacity are sent for manager review.</p>
+                    <p>One booking per selected date and time is auto-confirmed. Additional requests for that same time go to manager review.</p>
                 </section>
 
                 <section class="booking-summary bookings-enter" style="--enter-delay: 130ms" aria-label="Booking overview">
@@ -205,7 +205,7 @@
 
                         <div class="queue-list">
                             @forelse ($bookings as $booking)
-                                <a class="booking-row {{ $selectedBooking['reference'] === $booking['reference'] ? 'is-selected' : '' }}" href="{{ route('manager.bookings.index', array_merge(request()->except('booking'), ['booking' => $booking['reference']])) }}" aria-label="View booking {{ $booking['reference'] }}">
+                                <a class="booking-row {{ ($selectedBooking['reference'] ?? null) === $booking['reference'] ? 'is-selected' : '' }}" href="{{ route('manager.bookings.index', array_merge(request()->except('booking'), ['booking' => $booking['reference']])) }}" aria-label="View booking {{ $booking['reference'] }}">
                                     <span class="customer-avatar">{{ $booking['customer']['initials'] }}</span>
                                     <span class="queue-customer">
                                         <strong>{{ $booking['customer']['name'] }}</strong>

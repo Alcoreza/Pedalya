@@ -36,7 +36,9 @@
             @forelse ($bookings as $booking)
                 @php
                     $isCompleted = $booking->booking_status === 'completed';
-                    $bookingLabel = \Illuminate\Support\Str::headline($booking->booking_status);
+                    $bookingLabel = $booking->booking_status === 'pending' && $booking->processing_method === 'review_required'
+                        ? 'Awaiting approval'
+                        : ($booking->booking_status === 'confirmed' ? 'Confirmed' : \Illuminate\Support\Str::headline($booking->booking_status));
                     $paymentLabel = $booking->payment_status === 'paid' ? 'Paid' : \Illuminate\Support\Str::headline($booking->payment_status);
                     $bookingTone = in_array($booking->booking_status, ['rejected', 'cancelled'], true) ? 'pending' : ($isCompleted || $booking->booking_status === 'confirmed' ? 'success' : 'pending');
                     $paymentTone = $booking->payment_status === 'paid' ? 'success' : 'pending';

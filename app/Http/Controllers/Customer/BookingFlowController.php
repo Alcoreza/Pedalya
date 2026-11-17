@@ -83,6 +83,8 @@ class BookingFlowController extends Controller
                 'month_label' => $option['month_label'],
                 'long_label' => $option['long_label'],
                 'slots' => $option['slots'],
+                'auto_confirm_slots' => $option['auto_confirm_slots'],
+                'review_slots' => $option['review_slots'],
             ])->values()->all(),
             'selectedDate' => $selectedDate,
             'availableSlots' => $selectedOption['slots'],
@@ -128,9 +130,12 @@ class BookingFlowController extends Controller
             return redirect()->route('customer.schedule')->withErrors(['booking' => 'Choose a service and appointment time first.']);
         }
 
+        $appointmentAt = CarbonImmutable::parse($appointmentAt)->setTimezone(config('booking.timezone'));
+
         return view('customer.review', [
             'service' => $service,
-            'appointmentAt' => CarbonImmutable::parse($appointmentAt)->setTimezone(config('booking.timezone')),
+            'appointmentAt' => $appointmentAt,
+            'requiresManagerReview' => $this->availability->requiresManagerReview($appointmentAt),
             'user' => $request->user(),
         ]);
     }
@@ -154,13 +159,16 @@ class BookingFlowController extends Controller
         }
 
         $booking = DB::transaction(function () use ($serviceId, $startsAt, $validated, $request): ?Booking {
-            // Serialize slot checks so two customers cannot take the final place at once.
+            // Serialize overlap assessment and insertion so simultaneous requests
+            // receive consistent automatic/review decisions.
             DB::select('SELECT pg_advisory_xact_lock(74122201)');
 
             $service = Service::query()->where('is_active', true)->findOrFail($serviceId);
             if (! $this->availability->isAvailable($service, $startsAt)) {
                 return null;
             }
+
+            $requiresReview = $this->availability->requiresManagerReview($startsAt);
 
             $user = $request->user();
             $booking = Booking::query()->create([
@@ -175,14 +183,16 @@ class BookingFlowController extends Controller
                 'service_price' => $service->price,
                 'bike_notes' => $validated['notes'] ?? null,
                 'consent_confirmed' => true,
-                'booking_status' => 'pending',
+                'booking_status' => $requiresReview ? 'pending' : 'confirmed',
+                'processing_method' => $requiresReview ? 'review_required' : 'automatic',
+                'review_reason' => $requiresReview ? 'capacity_reached' : null,
                 'payment_status' => 'pending',
                 'calendar_status' => 'not_applicable',
             ]);
 
             Payment::query()->create([
                 'booking_id' => $booking->id,
-                'provider' => 'paymongo',
+                'provider' => 'maya',
                 'amount_minor' => (int) round((float) $service->price * 100),
                 'currency' => 'PHP',
                 'status' => 'pending',
@@ -197,7 +207,9 @@ class BookingFlowController extends Controller
                 ->withErrors(['time' => 'That appointment time was just taken. Please choose another slot.']);
         }
 
-        $this->googleCalendar->syncBooking($booking);
+        if ($booking->booking_status === 'confirmed') {
+            $this->googleCalendar->syncBooking($booking);
+        }
 
         $request->session()->forget('booking_flow');
 

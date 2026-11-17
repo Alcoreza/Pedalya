@@ -35,14 +35,10 @@ return [
         ],
     ],
 
-    'paymongo' => [
-        'base_url' => rtrim(env('PAYMONGO_BASE_URL', 'https://api.paymongo.com/v2'), '/'),
-        'secret_key' => env('PAYMONGO_SECRET_KEY'),
-        'webhook_secret' => env('PAYMONGO_WEBHOOK_SECRET'),
-        'payment_method_types' => array_values(array_filter(array_map(
-            'trim',
-            explode(',', env('PAYMONGO_PAYMENT_METHOD_TYPES', 'card,gcash,qrph')),
-        ))),
+    'maya' => [
+        'base_url' => rtrim(env('MAYA_BASE_URL', 'https://pg-sandbox.paymaya.com'), '/'),
+        'public_key' => env('MAYA_PUBLIC_KEY'),
+        'secret_key' => env('MAYA_SECRET_KEY'),
     ],
 
     'google_calendar' => [

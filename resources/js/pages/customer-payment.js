@@ -13,6 +13,6 @@ if (paymentPage) {
     setText('[data-payment-total]', record.total);
 
     document.querySelector('[data-payment-placeholder]').addEventListener('click', () => {
-        document.querySelector('[data-payment-message]').textContent = 'PayMongo checkout will be available after backend integration.';
+        document.querySelector('[data-payment-message]').textContent = 'Maya checkout starts from your booking confirmation.';
     });
 }

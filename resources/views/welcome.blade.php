@@ -146,7 +146,7 @@
                 <div class="page-shell integration-strip hero-enter" style="--enter-delay: 520ms">
                     <span>Connected with the tools you already trust</span>
                     <div>
-                        <strong>PayMongo</strong>
+                        <strong>Maya</strong>
                         <i></i>
                         <strong>Google Calendar</strong>
                         <i></i>
@@ -192,7 +192,7 @@
                             </div>
                             <div>
                                 <h3>Pay through a trusted checkout</h3>
-                                <p>Continue to a secure PayMongo payment experience when your booking becomes eligible for payment.</p>
+                                <p>Continue to a secure Maya payment experience when your booking becomes eligible for payment.</p>
                             </div>
                         </article>
 
@@ -262,8 +262,8 @@
 
                     <div class="connected-services" aria-label="Pedalya integrations">
                         <div class="service-pill">
-                            <span class="service-logo paymongo-logo">P</span>
-                            <span><strong>PayMongo</strong><small>Secure checkout</small></span>
+                            <span class="service-logo maya-logo">M</span>
+                            <span><strong>Maya</strong><small>Secure checkout</small></span>
                         </div>
                         <div class="service-pill">
                             <span class="service-logo calendar-logo">

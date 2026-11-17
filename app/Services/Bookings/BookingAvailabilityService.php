@@ -13,10 +13,14 @@ class BookingAvailabilityService
     {
         $today = CarbonImmutable::now(config('booking.timezone'))->startOfDay();
         $lastDate = $today->endOfMonth();
-        $bookings = $this->bookingsForWindow(
-            $today->setTimeFromTimeString(config('booking.opening_time')),
-            $lastDate->setTimeFromTimeString(config('booking.closing_time')),
-        );
+        $reservedTimes = Booking::query()
+            ->whereIn('booking_status', ['pending', 'confirmed'])
+            ->where('appointment_at', '>=', $today->utc()->toIso8601String())
+            ->where('appointment_at', '<', $lastDate->addDay()->utc()->toIso8601String())
+            ->get(['appointment_at'])
+            ->mapWithKeys(fn (Booking $booking): array => [
+                $booking->appointment_at->setTimezone(config('booking.timezone'))->format('Y-m-d H:i') => true,
+            ]);
         $dates = collect();
 
         for ($date = $today; $date->lessThanOrEqualTo($lastDate); $date = $date->addDay()) {
@@ -24,7 +28,7 @@ class BookingAvailabilityService
                 continue;
             }
 
-            $slots = $this->availableSlots($service, $date, $bookings);
+            $slots = $this->availableSlots($service, $date, $reservedTimes);
             $dates->push([
                 'date' => $date,
                 'key' => $date->format('Y-m-d'),
@@ -34,13 +38,15 @@ class BookingAvailabilityService
                 'long_label' => $date->format('l, F j'),
                 'slots' => $slots,
                 'available_slots' => count($slots),
+                'auto_confirm_slots' => collect($slots)->where('requires_review', false)->count(),
+                'review_slots' => collect($slots)->where('requires_review', true)->count(),
             ]);
         }
 
         return $dates;
     }
 
-    public function availableSlots(Service $service, CarbonImmutable $date, ?Collection $bookings = null): array
+    public function availableSlots(Service $service, CarbonImmutable $date, Collection $reservedTimes): array
     {
         if (! in_array($date->dayOfWeekIso, config('booking.open_days'), true)) {
             return [];
@@ -48,10 +54,6 @@ class BookingAvailabilityService
 
         $now = CarbonImmutable::now(config('booking.timezone'));
         $closeAt = $date->setTimeFromTimeString(config('booking.closing_time'));
-        $bookings ??= $this->bookingsForWindow(
-            $date->setTimeFromTimeString(config('booking.opening_time')),
-            $closeAt,
-        );
         $interval = (int) config('booking.slot_interval_minutes');
         $duration = (int) $service->duration_minutes;
         $slots = [];
@@ -65,12 +67,11 @@ class BookingAvailabilityService
                 continue;
             }
 
-            if ($this->hasCapacity($service, $start, $duration, $bookings)) {
-                $slots[] = [
-                    'time' => $start->format('H:i'),
-                    'label' => $start->format('g:i A'),
-                ];
-            }
+            $slots[] = [
+                'time' => $start->format('H:i'),
+                'label' => $start->format('g:i A'),
+                'requires_review' => $reservedTimes->has($start->format('Y-m-d H:i')),
+            ];
         }
 
         return $slots;
@@ -91,7 +92,16 @@ class BookingAvailabilityService
 
         $isSlotStart = in_array($startsAt->format('H:i'), $this->slotStartTimes($service, $date), true);
 
-        return $isSlotStart && $this->hasCapacity($service, $startsAt, (int) $service->duration_minutes);
+        return $isSlotStart;
+    }
+
+    /** Whether an active booking already owns this exact date and start time. */
+    public function requiresManagerReview(CarbonImmutable $startsAt): bool
+    {
+        return Booking::query()
+            ->whereIn('booking_status', ['pending', 'confirmed'])
+            ->where('appointment_at', $startsAt->utc()->toIso8601String())
+            ->exists();
     }
 
     public function slotStartTimes(Service $service, CarbonImmutable $date): array
@@ -112,27 +122,4 @@ class BookingAvailabilityService
         return $times;
     }
 
-    private function hasCapacity(Service $service, CarbonImmutable $startsAt, int $duration, ?Collection $bookings = null): bool
-    {
-        $endsAt = $startsAt->addMinutes($duration);
-        $occupied = $bookings === null
-            ? $this->bookingsForWindow($startsAt, $endsAt)->count()
-            : $bookings->filter(function (Booking $booking) use ($startsAt, $endsAt): bool {
-                $bookingStartsAt = $booking->appointment_at;
-                $bookingEndsAt = $bookingStartsAt->addMinutes((int) $booking->duration_minutes);
-
-                return $bookingStartsAt->lessThan($endsAt) && $bookingEndsAt->greaterThan($startsAt);
-            })->count();
-
-        return $occupied < (int) $service->capacity_per_slot;
-    }
-
-    private function bookingsForWindow(CarbonImmutable $startsAt, CarbonImmutable $endsAt): Collection
-    {
-        return Booking::query()
-            ->whereIn('booking_status', ['pending', 'confirmed'])
-            ->where('appointment_at', '<', $endsAt->utc()->toIso8601String())
-            ->whereRaw("appointment_at + (duration_minutes * INTERVAL '1 minute') > ?", [$startsAt->utc()->toIso8601String()])
-            ->get(['appointment_at', 'duration_minutes']);
-    }
 }

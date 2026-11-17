@@ -23,13 +23,13 @@
             <section class="schedule-panel" aria-label="Available appointment times" data-schedule-panel data-service-id="{{ $service->id }}" data-calendar-returned="{{ session('calendar_returned') ? 'true' : 'false' }}">
                 <div class="schedule-panel-heading">
                     <div><span data-calendar-month>{{ $selectedDate?->format('F Y') ?? 'Upcoming dates' }}</span><h2>Available appointments</h2></div>
-                    <div class="schedule-legend"><span><i class="legend-available"></i> Available</span><span><i class="legend-unavailable"></i> Fully booked</span></div>
+                    <div class="schedule-legend"><span><i class="legend-available"></i> Instant confirmation</span><span><i class="legend-review"></i> Approval required</span></div>
                 </div>
 
                 <div class="calendar-preview-bar" role="note">
                     <span class="calendar-preview-mark" data-calendar-day>{{ $selectedDate?->format('d') ?? '—' }}</span>
                     <div><strong>Pedalya workshop calendar</strong><span>Live availability · times shown in Asia/Manila</span></div>
-                    <span class="calendar-preview-state"><span data-open-slots>{{ $dateOptions->sum('available_slots') }}</span> open slots</span>
+                    <span class="calendar-preview-state"><span data-open-slots>{{ $dateOptions->sum('auto_confirm_slots') }}</span> instant · <span data-review-slots>{{ $dateOptions->sum('review_slots') }}</span> approval needed</span>
                 </div>
                 <div class="schedule-calendar-connect-row">
                     @if ($calendarConnection)
@@ -49,7 +49,13 @@
                            aria-pressed="{{ $selectedDate?->format('Y-m-d') === $option['key'] ? 'true' : 'false' }}">
                             <small>{{ $option['weekday'] }}</small>
                             <strong>{{ $option['day'] }}</strong>
-                            <span>{{ $option['available_slots'] === 1 ? '1 slot' : $option['available_slots'].' slots' }}</span>
+                            <span>
+                                @if ($option['auto_confirm_slots'] > 0)
+                                    {{ $option['auto_confirm_slots'] }} instant{{ $option['review_slots'] > 0 ? ' · '.$option['review_slots'].' approval' : '' }}
+                                @else
+                                    Approval only
+                                @endif
+                            </span>
                         </button>
                     @empty
                         <p>No appointment dates are available for the rest of this month.</p>
@@ -65,7 +71,7 @@
                     <div class="slot-heading"><span data-selected-long-date>{{ $selectedDate?->format('l, F j') ?? 'No date selected' }}</span><strong>Select a start time</strong></div>
                     <div class="slot-grid" role="radiogroup" aria-label="Available appointment times">
                         @forelse ($availableSlots as $slot)
-                            <button class="time-slot" type="button" data-slot="{{ $slot['time'] }}" aria-pressed="false">{{ $slot['label'] }}<span>Available</span></button>
+                            <button class="time-slot {{ $slot['requires_review'] ? 'is-review' : '' }}" type="button" data-slot="{{ $slot['time'] }}" data-review="{{ $slot['requires_review'] ? 'true' : 'false' }}" aria-pressed="false">{{ $slot['label'] }}<span>{{ $slot['requires_review'] ? 'Approval required' : 'Instant confirmation' }}</span></button>
                         @empty
                             <p>No slots are available for this date and service. Choose another date.</p>
                         @endforelse

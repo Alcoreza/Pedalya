@@ -19,7 +19,7 @@
 
         <section class="dashboard-stats" aria-label="Customer summary">
             <article><span>Active bookings</span><strong>{{ str_pad((string) $activeBookingsCount, 2, '0', STR_PAD_LEFT) }}</strong><small>Awaiting or underway</small></article>
-            <article><span>Needs attention</span><strong class="dashboard-stat-attention">{{ str_pad((string) $attentionCount, 2, '0', STR_PAD_LEFT) }}</strong><small>Pending booking or payment</small></article>
+            <article><span>Needs attention</span><strong class="dashboard-stat-attention">{{ str_pad((string) $attentionCount, 2, '0', STR_PAD_LEFT) }}</strong><small>Approval or payment needed</small></article>
             <article><span>Completed repairs</span><strong>{{ str_pad((string) $completedCount, 2, '0', STR_PAD_LEFT) }}</strong><small>All completed bookings</small></article>
         </section>
 
@@ -27,7 +27,7 @@
             <article class="dashboard-next-card">
                 <div class="dashboard-card-top"><span>Next appointment</span>
                     @if ($upcomingBooking)
-                        <span class="record-status {{ $upcomingBooking->booking_status === 'confirmed' ? 'status-success' : 'status-pending' }}"><i></i>{{ \Illuminate\Support\Str::headline($upcomingBooking->booking_status) }}</span>
+                        <span class="record-status {{ $upcomingBooking->booking_status === 'confirmed' ? 'status-success' : 'status-pending' }}"><i></i>{{ $upcomingBooking->booking_status === 'pending' && $upcomingBooking->processing_method === 'review_required' ? 'Awaiting approval' : \Illuminate\Support\Str::headline($upcomingBooking->booking_status) }}</span>
                     @endif
                 </div>
                 @if ($upcomingBooking)
@@ -35,7 +35,7 @@
                         <time class="dashboard-date" datetime="{{ $upcomingBooking->appointment_at->toDateString() }}"><small>{{ $upcomingBooking->appointment_at->format('D') }}</small><strong class="dashboard-date-number">{{ $upcomingBooking->appointment_at->format('d') }}</strong><span>{{ $upcomingBooking->appointment_at->format('M Y') }}</span></time>
                         <div><span class="dashboard-reference">{{ $upcomingBooking->reference }}</span><h2>{{ $upcomingBooking->service?->name ?? 'Repair service' }}</h2><p>{{ $upcomingBooking->appointment_at->format('g:i A') }} · Pedalya Bike Repair</p></div>
                     </div>
-                    <div class="dashboard-card-footer"><span>{{ \Illuminate\Support\Str::headline($upcomingBooking->payment_status) }} payment</span><a href="{{ route('customer.booking.detail', $upcomingBooking->reference) }}">View booking details <span aria-hidden="true">↗</span></a></div>
+                    <div class="dashboard-card-footer"><span>{{ $upcomingBooking->booking_status === 'pending' && $upcomingBooking->processing_method === 'review_required' ? 'Payment after approval' : \Illuminate\Support\Str::headline($upcomingBooking->payment_status).' payment' }}</span><a href="{{ route('customer.booking.detail', $upcomingBooking->reference) }}">View booking details <span aria-hidden="true">↗</span></a></div>
                 @else
                     <div class="dashboard-appointment"><div><h2>No upcoming appointment</h2><p>Your upcoming bookings will appear here.</p></div></div>
                     <div class="dashboard-card-footer"><span>Ready when you are</span><a href="{{ route('customer.book') }}">Book a repair <span aria-hidden="true">↗</span></a></div>
@@ -57,7 +57,7 @@
                         <a class="dashboard-booking-row" href="{{ route('customer.booking.detail', $booking->reference) }}">
                             <div class="dashboard-row-icon {{ $booking->booking_status === 'completed' ? 'row-icon-complete' : '' }}" aria-hidden="true"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="14"></circle><circle cx="24" cy="24" r="4"></circle><path d="M24 10v10M24 28v10M10 24h10M28 24h10"></path></svg></div>
                             <div class="dashboard-booking-copy"><strong>{{ $booking->service?->name ?? 'Repair service' }}</strong><span class="dashboard-booking-meta"><span class="dashboard-booking-reference">{{ $booking->reference }}</span><span class="dashboard-booking-divider" aria-hidden="true">·</span><span>{{ $booking->appointment_at->format('M d, g:i A') }}</span></span></div>
-                            <span class="record-status {{ $booking->booking_status === 'completed' ? 'status-success' : ($booking->booking_status === 'confirmed' ? 'status-brand' : 'status-pending') }}"><i></i>{{ \Illuminate\Support\Str::headline($booking->booking_status) }}</span>
+                            <span class="record-status {{ $booking->booking_status === 'completed' ? 'status-success' : ($booking->booking_status === 'confirmed' ? 'status-brand' : 'status-pending') }}"><i></i>{{ $booking->booking_status === 'pending' && $booking->processing_method === 'review_required' ? 'Awaiting approval' : \Illuminate\Support\Str::headline($booking->booking_status) }}</span>
                         </a>
                     @empty
                         <p>You haven’t made a booking yet. <a href="{{ route('customer.book') }}">Book your first repair.</a></p>

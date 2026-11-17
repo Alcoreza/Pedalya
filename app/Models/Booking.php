@@ -23,6 +23,8 @@ class Booking extends Model
         'bike_notes',
         'consent_confirmed',
         'booking_status',
+        'processing_method',
+        'review_reason',
         'payment_status',
         'calendar_status',
         'calendar_event_id',

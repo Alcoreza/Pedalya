@@ -4,17 +4,18 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Customer\ProfileController;
 use App\Http\Controllers\Customer\BookingFlowController;
+use App\Http\Controllers\Customer\BookingPaymentController;
 use App\Http\Controllers\Customer\BookingsController as CustomerBookingsController;
 use App\Http\Controllers\Customer\DashboardController as CustomerDashboardController;
 use App\Http\Controllers\Customer\GoogleCalendarConnectionController;
-use App\Http\Controllers\Customer\PayMongoCheckoutController;
+use App\Http\Controllers\Customer\MayaCheckoutController;
 use App\Http\Controllers\Customer\PaymentResultController;
 use App\Http\Controllers\Manager\ActivityController;
 use App\Http\Controllers\Manager\BookingsController;
 use App\Http\Controllers\Manager\DashboardController;
 use App\Http\Controllers\Manager\RepairsController;
 use App\Http\Controllers\Manager\ScheduleController;
-use App\Http\Controllers\Webhooks\PayMongoWebhookController;
+use App\Http\Controllers\Webhooks\MayaWebhookController;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
@@ -35,16 +36,17 @@ Route::middleware(['auth', 'role:customer'])->group(function () {
     Route::post('/book/review', [BookingFlowController::class, 'store'])->name('customer.review.store');
     Route::get('/book/confirmation/{reference}', [BookingFlowController::class, 'confirmation'])->name('customer.confirmation');
     Route::get('/customer/bookings', [CustomerBookingsController::class, 'index'])->name('customer.bookings');
+    Route::get('/customer/bookings/{reference}/payment', [BookingPaymentController::class, 'show'])->name('customer.payment');
     Route::get('/customer/dashboard', CustomerDashboardController::class)->name('customer.dashboard');
     Route::get('/customer/calendar/connect', [GoogleCalendarConnectionController::class, 'connect'])->name('customer.calendar.connect');
     Route::get('/customer/calendar/callback', [GoogleCalendarConnectionController::class, 'callback'])->name('customer.calendar.callback');
     Route::delete('/customer/calendar/disconnect', [GoogleCalendarConnectionController::class, 'disconnect'])->name('customer.calendar.disconnect');
-    Route::post('/book/confirmation/{reference}/checkout', [PayMongoCheckoutController::class, 'start'])->name('customer.checkout');
+    Route::post('/book/confirmation/{reference}/checkout', [MayaCheckoutController::class, 'start'])->name('customer.checkout');
     Route::get('/payments/{payment}/success', [PaymentResultController::class, 'success'])->name('customer.payment.success');
     Route::get('/payments/{payment}/failed', [PaymentResultController::class, 'failed'])->name('customer.payment.failed');
 });
 
-Route::post('/webhooks/paymongo', PayMongoWebhookController::class)->name('webhooks.paymongo');
+Route::post('/webhooks/maya', MayaWebhookController::class)->name('webhooks.maya');
 
 Route::redirect('/customer', '/customer/dashboard');
 Route::get('/customer/profile', [ProfileController::class, 'edit'])->middleware('auth')->name('customer.profile');
@@ -52,7 +54,6 @@ Route::put('/customer/profile', [ProfileController::class, 'update'])->middlewar
 Route::view('/customer/bookings/{booking}', 'customer.booking-detail')->name('customer.booking.detail');
 Route::redirect('/customer/repairs', '/customer/bookings')->name('customer.repairs');
 Route::get('/customer/repairs/{booking}', fn (string $booking) => redirect()->route('customer.booking.detail', $booking))->name('customer.repair');
-Route::view('/customer/bookings/{booking}/payment', 'customer.payment')->name('customer.payment');
 
 Route::prefix('manager')->name('manager.')->middleware(['auth', 'role:manager'])->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');

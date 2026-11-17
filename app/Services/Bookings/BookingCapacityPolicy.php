@@ -11,26 +11,25 @@ class BookingCapacityPolicy
     public function assess(array $candidate, Collection $bookings): array
     {
         $startsAt = $candidate['appointment_at'];
-        $duration = $this->durationFor($candidate['service']);
+        $duration = (int) ($candidate['duration_minutes'] ?? $this->durationFor($candidate['service']));
         $endsAt = $startsAt->copy()->addMinutes($duration);
-        $capacity = $this->capacityFor($candidate['service'], $startsAt);
+        $capacity = (int) ($candidate['capacity_per_slot'] ?? $this->capacityFor($candidate['service'], $startsAt));
 
         $conflicts = $bookings
             ->filter(function (array $booking) use ($candidate, $startsAt, $endsAt): bool {
-                if ($booking['reference'] === $candidate['reference'] || ($booking['booking_status']['key'] ?? null) !== 'confirmed') {
+                if ($booking['reference'] === $candidate['reference']
+                    || ! in_array(($booking['booking_status']['key'] ?? null), ['confirmed', 'review_required'], true)) {
                     return false;
                 }
 
                 $otherStart = $booking['appointment_at'];
-                $otherEnd = $otherStart->copy()->addMinutes($this->durationFor($booking['service']));
 
-                return $otherStart->lt($endsAt) && $otherEnd->gt($startsAt);
+                return $otherStart->equalTo($startsAt);
             })
             ->values();
 
-        $isAlreadyConfirmed = ($candidate['booking_status']['key'] ?? null) === 'confirmed';
-        $occupied = $conflicts->count() + ($isAlreadyConfirmed ? 1 : 0);
-        $occupancyWithRequest = $isAlreadyConfirmed ? $occupied : $occupied + 1;
+        $occupied = $conflicts->count();
+        $occupancyWithRequest = $occupied + 1;
 
         return [
             'starts_at' => $startsAt,
@@ -45,7 +44,7 @@ class BookingCapacityPolicy
                 'customer' => $booking['customer']['name'],
                 'service' => $booking['service'],
                 'appointment_at' => $booking['appointment_at'],
-                'ends_at' => $booking['appointment_at']->copy()->addMinutes($this->durationFor($booking['service'])),
+                'ends_at' => $booking['appointment_at']->copy()->addMinutes((int) ($booking['duration_minutes'] ?? $this->durationFor($booking['service']))),
             ]),
         ];
     }
@@ -81,7 +80,7 @@ class BookingCapacityPolicy
             }
         }
 
-        return max(1, (int) config('booking.default_capacity', 2));
+        return max(1, (int) config('booking.default_capacity', 1));
     }
 
     private function matchesOverride(array $rule, string $serviceKey, CarbonInterface $startsAt): bool
