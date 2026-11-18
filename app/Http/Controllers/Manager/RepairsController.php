@@ -115,17 +115,17 @@ class RepairsController extends Controller
             )
             ->values();
 
-        $selected = $filtered->firstWhere('reference', $validated['repair'] ?? null) ?? $filtered->first();
+        $selected = $filteredRepairs->firstWhere('reference', $validated['repair'] ?? null) ?? $filteredRepairs->first();
         $now = now(config('booking.timezone'));
 
         return view('manager.repairs', [
             'manager' => ManagerPresenter::manager($request->user()),
             'navigation' => ['pending_bookings' => ManagerPresenter::pendingBookings()],
             'summary' => [
-                'awaiting_today' => $all->filter(fn (array $r): bool => $r['repair_status']['key'] === 'awaiting_arrival' && $r['appointment_at']->isSameDay($now))->count(),
-                'at_shop' => $all->where('repair_status.key', 'at_shop')->count(),
-                'in_progress' => $all->where('repair_status.key', 'in_progress')->count(),
-                'completed_today' => $all->filter(fn (array $r): bool => $r['completed_at']?->setTimezone(config('booking.timezone'))->isSameDay($now) === true)->count(),
+                'awaiting_today' => $repairs->filter(fn (array $r): bool => $r['repair_status']['key'] === 'awaiting_arrival' && $r['appointment_at']->isSameDay($now))->count(),
+                'at_shop' => $repairs->where('repair_status.key', 'at_shop')->count(),
+                'in_progress' => $repairs->where('repair_status.key', 'in_progress')->count(),
+                'completed_today' => $repairs->filter(fn (array $r): bool => $r['completed_at']?->setTimezone(config('booking.timezone'))->isSameDay($now) === true)->count(),
             ],
             'tabCounts' => [
                 'active' => $repairs->filter(fn (array $repair): bool => in_array($repair['repair_status']['key'], self::ACTIVE, true))->count(),
@@ -133,7 +133,7 @@ class RepairsController extends Controller
             ],
             'statusOptions' => $statusOptions,
             'filters' => $filters,
-            'repairs' => $filtered,
+            'repairs' => $filteredRepairs,
             'selectedRepair' => $selected,
             'auditEvents' => $selected ? $this->auditEvents($selected) : collect(),
         ]);
@@ -211,11 +211,6 @@ class RepairsController extends Controller
         return $rejection === null
             ? $this->transitionAccepted($reference, $rule['accept'], $rule['accept_tab'])
             : $this->transitionRejected($reference, $rejection, $rule['reject_tab']);
-    }
-
-    private function key(Booking $booking): string
-    {
-        return $booking->repair_status ?? 'awaiting_arrival';
     }
 
     private function transitionRejected(string $booking, string $message, string $tab = 'active'): RedirectResponse

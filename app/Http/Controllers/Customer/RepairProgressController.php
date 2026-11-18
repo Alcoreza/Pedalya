@@ -12,7 +12,7 @@ class RepairProgressController extends Controller
     public function index(Request $request): View
     {
         $bookings = $request->user()->bookings()
-            ->with(['service', 'payment'])
+            ->with(['service', 'payment', 'repair'])
             ->whereNotIn('booking_status', ['rejected', 'cancelled'])
             ->orderByDesc('appointment_at')
             ->get();
@@ -42,14 +42,14 @@ class RepairProgressController extends Controller
     private function bookingForCustomer(Request $request, string $reference): Booking
     {
         return $request->user()->bookings()
-            ->with(['service', 'payment'])
+            ->with(['service', 'payment', 'repair.arrivedBy', 'repair.startedBy', 'repair.completedBy', 'repair.claimedBy'])
             ->where('reference', $reference)
             ->firstOrFail();
     }
 
     private function repairStatus(Booking $booking): array
     {
-        $key = $booking->repair_status ?: match ($booking->booking_status) {
+        $key = $booking->repair?->status ?? $booking->repair_status ?? match ($booking->booking_status) {
             'completed' => 'completed',
             'confirmed' => 'awaiting_arrival',
             default => 'not_started',
@@ -69,6 +69,7 @@ class RepairProgressController extends Controller
 
     private function timeline(Booking $booking, array $repairStatus): array
     {
+        $repair = $booking->repair;
         $approvalPending = $booking->booking_status === 'pending' && $booking->processing_method === 'review_required';
         $confirmed = in_array($booking->booking_status, ['confirmed', 'completed'], true);
 
@@ -80,10 +81,10 @@ class RepairProgressController extends Controller
                 'at' => $confirmed ? $booking->created_at : null,
                 'state' => $approvalPending ? 'current' : ($confirmed || $booking->booking_status === 'rejected' ? 'complete' : 'upcoming'),
             ],
-            ['title' => 'Bike arrived at shop', 'copy' => $booking->repair_arrived_by ? 'Recorded by '.$booking->repair_arrived_by.'.' : 'The workshop will update this when your bike is received.', 'at' => $booking->repair_arrived_at, 'state' => $booking->repair_arrived_at ? 'complete' : ($repairStatus['key'] === 'awaiting_arrival' ? 'current' : 'upcoming')],
-            ['title' => 'Repair work started', 'copy' => $booking->repair_started_by ? 'Recorded by '.$booking->repair_started_by.'.' : 'Repair work begins after the bike arrives and payment is verified.', 'at' => $booking->repair_started_at, 'state' => $booking->repair_started_at ? 'complete' : ($repairStatus['key'] === 'at_shop' ? 'current' : 'upcoming')],
-            ['title' => 'Repair completed', 'copy' => $booking->repair_completed_by ? 'Your bike is ready for pickup.' : 'We will update this when the repair is finished.', 'at' => $booking->repair_completed_at, 'state' => $booking->repair_completed_at ? 'complete' : ($repairStatus['key'] === 'in_progress' ? 'current' : 'upcoming')],
-            ['title' => 'Bike picked up', 'copy' => $booking->repair_claimed_by ? 'Pickup recorded by '.$booking->repair_claimed_by.'.' : 'This step is updated after you collect your bike.', 'at' => $booking->repair_claimed_at, 'state' => $booking->repair_claimed_at ? 'complete' : ($repairStatus['key'] === 'completed' ? 'current' : 'upcoming')],
+            ['title' => 'Bike arrived at shop', 'copy' => $repair?->arrivedBy?->name ? 'Recorded by '.$repair->arrivedBy->name.'.' : 'The workshop will update this when your bike is received.', 'at' => $repair?->arrived_at, 'state' => $repair?->arrived_at ? 'complete' : ($repairStatus['key'] === 'awaiting_arrival' ? 'current' : 'upcoming')],
+            ['title' => 'Repair work started', 'copy' => $repair?->startedBy?->name ? 'Recorded by '.$repair->startedBy->name.'.' : 'Repair work begins after the bike arrives and payment is verified.', 'at' => $repair?->started_at, 'state' => $repair?->started_at ? 'complete' : ($repairStatus['key'] === 'at_shop' ? 'current' : 'upcoming')],
+            ['title' => 'Repair completed', 'copy' => $repair?->completedBy?->name ? 'Your bike is ready for pickup.' : 'We will update this when the repair is finished.', 'at' => $repair?->completed_at, 'state' => $repair?->completed_at ? 'complete' : ($repairStatus['key'] === 'in_progress' ? 'current' : 'upcoming')],
+            ['title' => 'Bike picked up', 'copy' => $repair?->claimedBy?->name ? 'Pickup recorded by '.$repair->claimedBy->name.'.' : 'This step is updated after you collect your bike.', 'at' => $repair?->claimed_at, 'state' => $repair?->claimed_at ? 'complete' : ($repairStatus['key'] === 'completed' ? 'current' : 'upcoming')],
         ];
 
         return array_map(function (array $event): array {

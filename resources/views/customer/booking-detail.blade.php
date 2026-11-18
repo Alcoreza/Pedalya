@@ -5,7 +5,7 @@
         : \Illuminate\Support\Str::headline($booking->booking_status);
     $paymentLabel = $booking->payment_status === 'paid' ? 'Paid' : \Illuminate\Support\Str::headline($booking->payment_status);
     $repairLabels = ['awaiting_arrival' => 'Awaiting bike arrival', 'at_shop' => 'Bike at shop', 'in_progress' => 'Repair in progress', 'completed' => 'Repair completed', 'claimed' => 'Bike claimed'];
-    $repairKey = $booking->repair_status ?? ($booking->booking_status === 'completed' ? 'completed' : ($booking->booking_status === 'confirmed' ? 'awaiting_arrival' : 'not_started'));
+    $repairKey = $booking->repair?->status ?? ($booking->booking_status === 'completed' ? 'completed' : ($booking->booking_status === 'confirmed' ? 'awaiting_arrival' : 'not_started'));
     $repairLabel = $repairLabels[$repairKey] ?? 'Not started';
     $calendarLabel = match ($booking->calendar_status) {
         'synchronized' => 'Synchronized', 'failed' => 'Sync failed', 'pending' => 'Sync pending', default => 'Not scheduled',

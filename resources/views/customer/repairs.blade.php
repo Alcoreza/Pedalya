@@ -14,7 +14,7 @@
         <section class="repair-choice-grid" aria-label="Your repairs">
             @forelse ($bookings as $booking)
                 @php
-                    $key = $booking->repair_status ?? ($booking->booking_status === 'completed' ? 'completed' : ($booking->booking_status === 'confirmed' ? 'awaiting_arrival' : 'not_started'));
+                    $key = $booking->repair?->status ?? $booking->repair_status ?? ($booking->booking_status === 'completed' ? 'completed' : ($booking->booking_status === 'confirmed' ? 'awaiting_arrival' : 'not_started'));
                     $labels = ['not_started' => 'Not started', 'awaiting_arrival' => 'Awaiting bike arrival', 'at_shop' => 'Bike at shop', 'in_progress' => 'Repair in progress', 'completed' => 'Repair completed', 'claimed' => 'Bike claimed'];
                     $label = $booking->booking_status === 'pending' && $booking->processing_method === 'review_required' ? 'Awaiting manager approval' : ($labels[$key] ?? \Illuminate\Support\Str::headline($booking->booking_status));
                     $tone = in_array($key, ['completed', 'claimed', 'at_shop'], true) ? 'success' : ($key === 'in_progress' ? 'brand' : 'pending');
