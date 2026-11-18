@@ -169,7 +169,6 @@
                                 <div><dt>Booking reference</dt><dd>{{ $selectedActivity['booking_reference'] }}</dd></div>
                                 <div><dt>Category</dt><dd>{{ $selectedActivity['category']['label'] }}</dd></div>
                                 <div><dt>Provider</dt><dd>{{ $selectedActivity['provider'] }}</dd></div>
-                                <div><dt>Provider reference</dt><dd>{{ $selectedActivity['provider_reference'] ?? 'Not recorded' }}</dd></div>
                                 <div><dt>Responsible actor</dt><dd>{{ $selectedActivity['actor'] }}</dd></div>
                                 <div><dt>Recorded at</dt><dd><time datetime="{{ $selectedActivity['occurred_at']->toIso8601String() }}">{{ $selectedActivity['occurred_at']->format('F d, Y · g:i A') }}</time></dd></div>
                             </dl>
