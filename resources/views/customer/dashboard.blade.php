@@ -42,7 +42,9 @@
                     @endif
                 </div>
                 @if ($upcomingBooking)
-                    @php($upcomingAppointmentAt = $upcomingBooking->appointment_at->setTimezone(config('booking.timezone')))
+                    @php
+                        $upcomingAppointmentAt = $upcomingBooking->appointment_at->setTimezone(config('booking.timezone'));
+                    @endphp
                     <div class="dashboard-appointment">
                         <time class="dashboard-date" datetime="{{ $upcomingAppointmentAt->toIso8601String() }}"><small>{{ $upcomingAppointmentAt->format('D') }}</small><strong class="dashboard-date-number">{{ $upcomingAppointmentAt->format('d') }}</strong><span>{{ $upcomingAppointmentAt->format('M Y') }}</span></time>
                         <div><span class="dashboard-reference">{{ $upcomingBooking->reference }}</span><h2>{{ $upcomingBooking->service?->name ?? 'Repair service' }}</h2><p>{{ $upcomingAppointmentAt->format('g:i A') }} · Pedalya Bike Repair</p></div>
@@ -65,8 +67,10 @@
             <article class="recent-bookings-panel">
                 <div class="activity-intro"><div><span>Activity</span><h2>Booking activity</h2><p>Your latest repair bookings.</p></div><a href="{{ route('customer.bookings') }}"><span class="activity-link-label">View all</span></a></div>
                 <div class="activity-feed" aria-label="Recent booking activity">
-                    @forelse ($recentBookings as $booking)
-                        @php($localAppointmentAt = $booking->appointment_at->setTimezone(config('booking.timezone')))
+                    @foreach ($recentBookings as $booking)
+                        @php
+                            $localAppointmentAt = $booking->appointment_at->setTimezone(config('booking.timezone'));
+                        @endphp
                         @php
                             $repairStatus = $booking->repair?->status;
                             $repairIsComplete = $booking->booking_status === 'completed' || in_array($repairStatus, ['completed', 'claimed'], true);
@@ -85,9 +89,10 @@
                             <div class="dashboard-booking-copy"><strong>{{ $booking->service?->name ?? 'Repair service' }}</strong><span class="dashboard-booking-meta"><span class="dashboard-booking-reference">{{ $booking->reference }}</span><span class="dashboard-booking-divider" aria-hidden="true">·</span><span>{{ $localAppointmentAt->format('M d, g:i A') }}</span></span></div>
                             <span class="record-status {{ $repairStatusTone }}"><i></i>{{ $repairStatusLabel }}</span>
                         </a>
-                    @empty
+                    @endforeach
+                    @if ($recentBookings->isEmpty())
                         <p>You haven’t made a booking yet. <a href="{{ route('customer.book') }}">Book your first repair.</a></p>
-                    @endforelse
+                    @endif
                 </div>
             </article>
             <article class="dashboard-panel dashboard-location-panel">
