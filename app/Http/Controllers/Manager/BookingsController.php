@@ -34,7 +34,7 @@ class BookingsController extends Controller
                 return $records->filter(fn (array $booking): bool => Str::contains(Str::lower(implode(' ', [
                     $booking['reference'], $booking['customer']['name'], $booking['customer']['email'],
                     $booking['service'], $booking['notes'] ?? '', $booking['processing_method']['label'],
-                ])), $search);
+                ])), $search));
             })
             ->when($filters['booking_status'] !== '', fn (Collection $records): Collection => $records->where('booking_status.key', $filters['booking_status']))
             ->when($filters['processing_method'] !== '', fn (Collection $records): Collection => $records->where('processing_method.key', $filters['processing_method']))

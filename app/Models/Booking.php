@@ -29,6 +29,15 @@ class Booking extends Model
         'calendar_status',
         'calendar_event_id',
         'calendar_sync_attempts',
+        'repair_status',
+        'repair_arrived_at',
+        'repair_arrived_by',
+        'repair_started_at',
+        'repair_started_by',
+        'repair_completed_at',
+        'repair_completed_by',
+        'repair_claimed_at',
+        'repair_claimed_by',
         'created_at',
     ];
 
@@ -39,6 +48,10 @@ class Booking extends Model
             'service_price' => 'decimal:2',
             'consent_confirmed' => 'boolean',
             'created_at' => 'immutable_datetime',
+            'repair_arrived_at' => 'immutable_datetime',
+            'repair_started_at' => 'immutable_datetime',
+            'repair_completed_at' => 'immutable_datetime',
+            'repair_claimed_at' => 'immutable_datetime',
         ];
     }
 

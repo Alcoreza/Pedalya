@@ -58,12 +58,35 @@ CREATE TABLE IF NOT EXISTS public.bookings (
         CHECK (calendar_status IN ('not_applicable', 'pending', 'synchronized', 'failed')),
     calendar_event_id text,
     calendar_sync_attempts smallint NOT NULL DEFAULT 0 CHECK (calendar_sync_attempts >= 0),
+    repair_status text CHECK (repair_status IS NULL OR repair_status IN ('awaiting_arrival', 'at_shop', 'in_progress', 'completed', 'claimed')),
+    repair_arrived_at timestamptz,
+    repair_arrived_by text,
+    repair_started_at timestamptz,
+    repair_started_by text,
+    repair_completed_at timestamptz,
+    repair_completed_by text,
+    repair_claimed_at timestamptz,
+    repair_claimed_by text,
     created_at timestamptz NOT NULL DEFAULT now()
 );
 
 -- Keep existing Supabase projects in sync when this schema file is re-run.
 ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS processing_method text NOT NULL DEFAULT 'automatic';
 ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS review_reason text;
+ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS repair_status text;
+ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS repair_arrived_at timestamptz;
+ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS repair_arrived_by text;
+ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS repair_started_at timestamptz;
+ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS repair_started_by text;
+ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS repair_completed_at timestamptz;
+ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS repair_completed_by text;
+ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS repair_claimed_at timestamptz;
+ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS repair_claimed_by text;
+DO $$ BEGIN
+    ALTER TABLE public.bookings ADD CONSTRAINT bookings_repair_status_check
+        CHECK (repair_status IS NULL OR repair_status IN ('awaiting_arrival', 'at_shop', 'in_progress', 'completed', 'claimed'));
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 DO $$ BEGIN
     ALTER TABLE public.bookings ADD CONSTRAINT bookings_processing_method_check
         CHECK (processing_method IN ('automatic', 'review_required', 'manual'));

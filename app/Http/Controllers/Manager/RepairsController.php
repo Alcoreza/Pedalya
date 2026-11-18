@@ -3,20 +3,19 @@
 namespace App\Http\Controllers\Manager;
 
 use App\Http\Controllers\Controller;
+use App\Models\Booking;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class RepairsController extends Controller
 {
-    private const STATUS_LABELS = [
-        'awaiting_arrival' => 'Awaiting arrival',
-        'at_shop' => 'Bike at shop',
-        'in_progress' => 'Repair in progress',
-        'completed' => 'Repair completed',
-        'claimed' => 'Bike claimed',
+    private const LABELS = [
+        'awaiting_arrival' => 'Awaiting arrival', 'at_shop' => 'Bike at shop',
+        'in_progress' => 'Repair in progress', 'completed' => 'Repair completed', 'claimed' => 'Bike claimed',
     ];
 
     public function index(Request $request): View
@@ -28,232 +27,149 @@ class RepairsController extends Controller
             'repair' => ['nullable', 'string', 'max:40'],
         ]);
 
-        $managerName = $this->managerName();
-        $overrides = $request->session()->get('manager_repair_status_overrides', []);
-        $repairs = $this->repairRecords()->map(function (array $repair) use ($overrides): array {
-            return array_replace($repair, $overrides[$repair['reference']] ?? []);
-        });
+        $all = Booking::query()
+            ->with(['service', 'payment'])
+            ->whereIn('booking_status', ['confirmed', 'completed'])
+            ->orderByDesc('appointment_at')
+            ->get()
+            ->map(fn (Booking $booking): array => $this->record($booking));
 
-        $tab = (string) ($validated['tab'] ?? 'active');
+        $tab = $validated['tab'] ?? 'active';
         $statusOptions = $tab === 'records'
             ? ['completed' => 'Completed', 'claimed' => 'Claimed']
             : ['awaiting_arrival' => 'Awaiting arrival', 'at_shop' => 'At shop', 'in_progress' => 'In progress'];
         $requestedStatus = (string) ($validated['status'] ?? '');
-
         $filters = [
             'search' => trim((string) ($validated['search'] ?? '')),
             'tab' => $tab,
             'status' => array_key_exists($requestedStatus, $statusOptions) ? $requestedStatus : '',
         ];
 
-        $filteredRepairs = $repairs
-            ->filter(function (array $repair) use ($tab): bool {
-                $status = $repair['repair_status']['key'];
-
-                return $tab === 'records'
-                    ? in_array($status, ['completed', 'claimed'], true)
-                    : in_array($status, ['awaiting_arrival', 'at_shop', 'in_progress'], true);
+        $filtered = $all
+            ->filter(fn (array $repair): bool => $tab === 'records'
+                ? in_array($repair['repair_status']['key'], ['completed', 'claimed'], true)
+                : in_array($repair['repair_status']['key'], ['awaiting_arrival', 'at_shop', 'in_progress'], true))
+            ->when($filters['search'] !== '', function (Collection $items) use ($filters): Collection {
+                $needle = Str::lower($filters['search']);
+                return $items->filter(fn (array $repair): bool => Str::contains(Str::lower(implode(' ', [
+                    $repair['reference'], $repair['customer']['name'], $repair['service'], $repair['notes'] ?? '', $repair['repair_status']['label'],
+                ])), $needle));
             })
-            ->when($filters['search'] !== '', function (Collection $records) use ($filters): Collection {
-                $search = Str::lower($filters['search']);
-
-                return $records->filter(fn (array $repair): bool => Str::contains(
-                    Str::lower(implode(' ', [
-                        $repair['reference'],
-                        $repair['customer']['name'],
-                        $repair['service'],
-                        $repair['notes'] ?? '',
-                        $repair['repair_status']['label'],
-                    ])),
-                    $search,
-                ));
-            })
-            ->when($filters['status'] !== '', fn (Collection $records): Collection => $records->filter(
-                fn (array $repair): bool => $repair['repair_status']['key'] === $filters['status'],
-            ))
+            ->when($filters['status'] !== '', fn (Collection $items): Collection => $items->where('repair_status.key', $filters['status']))
             ->values();
 
-        $selectedRepair = $filteredRepairs->firstWhere('reference', $validated['repair'] ?? null)
-            ?? $filteredRepairs->first();
+        $selected = $filtered->firstWhere('reference', $validated['repair'] ?? null) ?? $filtered->first();
+        $now = now(config('booking.timezone'));
 
         return view('manager.repairs', [
-            'manager' => [
-                'name' => $managerName,
-                'initials' => $this->initials($managerName),
-                'role' => 'Manager',
-            ],
-            'navigation' => ['pending_bookings' => 2],
+            'manager' => ['name' => $request->user()->name, 'initials' => $this->initials($request->user()->name), 'role' => 'Manager'],
+            'navigation' => ['pending_bookings' => Booking::query()->where('booking_status', 'pending')->where('processing_method', 'review_required')->count()],
             'summary' => [
-                'awaiting_today' => $repairs->filter(fn (array $repair): bool => $repair['repair_status']['key'] === 'awaiting_arrival' && $repair['appointment_at']->isToday())->count(),
-                'at_shop' => $repairs->filter(fn (array $repair): bool => $repair['repair_status']['key'] === 'at_shop')->count(),
-                'in_progress' => $repairs->filter(fn (array $repair): bool => $repair['repair_status']['key'] === 'in_progress')->count(),
-                'completed_today' => $repairs->filter(fn (array $repair): bool => $repair['completed_at']?->isToday() === true)->count(),
+                'awaiting_today' => $all->filter(fn (array $r): bool => $r['repair_status']['key'] === 'awaiting_arrival' && $r['appointment_at']->isSameDay($now))->count(),
+                'at_shop' => $all->where('repair_status.key', 'at_shop')->count(),
+                'in_progress' => $all->where('repair_status.key', 'in_progress')->count(),
+                'completed_today' => $all->filter(fn (array $r): bool => $r['completed_at']?->setTimezone(config('booking.timezone'))->isSameDay($now) === true)->count(),
             ],
             'tabCounts' => [
-                'active' => $repairs->filter(fn (array $repair): bool => in_array($repair['repair_status']['key'], ['awaiting_arrival', 'at_shop', 'in_progress'], true))->count(),
-                'records' => $repairs->filter(fn (array $repair): bool => in_array($repair['repair_status']['key'], ['completed', 'claimed'], true))->count(),
+                'active' => $all->whereIn('repair_status.key', ['awaiting_arrival', 'at_shop', 'in_progress'])->count(),
+                'records' => $all->whereIn('repair_status.key', ['completed', 'claimed'])->count(),
             ],
             'statusOptions' => $statusOptions,
             'filters' => $filters,
-            'repairs' => $filteredRepairs,
-            'selectedRepair' => $selectedRepair,
-            'auditEvents' => $selectedRepair ? $this->auditEvents($selectedRepair) : collect(),
+            'repairs' => $filtered,
+            'selectedRepair' => $selected,
+            'auditEvents' => $selected ? $this->auditEvents($selected) : collect(),
         ]);
     }
 
     public function markArrived(Request $request, string $booking): RedirectResponse
     {
-        $repair = $this->currentRepair($request, $booking);
-
-        if ($repair['repair_status']['key'] !== 'awaiting_arrival') {
-            return $this->transitionRejected($booking, 'Bike arrival can only be recorded while the repair is awaiting arrival.');
-        }
-
-        $this->storeTransition($request, $booking, [
-            'repair_status' => $this->status('at_shop'),
-            'arrived_at' => now(),
-            'arrived_by' => $this->managerName(),
-        ]);
-
-        return $this->transitionAccepted($booking, 'The bike was recorded at the shop.');
+        $record = $this->findRepair($booking);
+        abort_unless($this->key($record) === 'awaiting_arrival', 422, 'Bike arrival can only be recorded while the repair is awaiting arrival.');
+        $record->update(['repair_status' => 'at_shop', 'repair_arrived_at' => now(), 'repair_arrived_by' => $request->user()->name]);
+        return $this->done($booking, 'The bike was recorded at the shop.');
     }
 
     public function start(Request $request, string $booking): RedirectResponse
     {
-        $repair = $this->currentRepair($request, $booking);
-
-        if ($repair['repair_status']['key'] !== 'at_shop') {
-            return $this->transitionRejected($booking, 'The repair can only begin after the bike is recorded at the shop.');
-        }
-
-        if ($repair['payment_status']['key'] !== 'successful') {
-            return $this->transitionRejected($booking, 'Payment must be successful before repair work can begin.');
-        }
-
-        $this->storeTransition($request, $booking, [
-            'repair_status' => $this->status('in_progress'),
-            'started_at' => now(),
-            'started_by' => $this->managerName(),
-        ]);
-
-        return $this->transitionAccepted($booking, 'Repair work was started.');
+        $record = $this->findRepair($booking);
+        abort_unless($this->key($record) === 'at_shop', 422, 'The repair can only begin after the bike is recorded at the shop.');
+        abort_unless($record->payment_status === 'paid', 422, 'Payment must be successful before repair work can begin.');
+        $record->update(['repair_status' => 'in_progress', 'repair_started_at' => now(), 'repair_started_by' => $request->user()->name]);
+        return $this->done($booking, 'Repair work was started.');
     }
 
     public function markCompleted(Request $request, string $booking): RedirectResponse
     {
-        $repair = $this->currentRepair($request, $booking);
-
-        if ($repair['repair_status']['key'] !== 'in_progress') {
-            return $this->transitionRejected($booking, 'Only a repair in progress can be marked completed.');
-        }
-
-        $this->storeTransition($request, $booking, [
-            'repair_status' => $this->status('completed'),
-            'completed_at' => now(),
-            'completed_by' => $this->managerName(),
-        ]);
-
-        return $this->transitionAccepted($booking, 'The repair was completed and is ready for customer pickup.', 'records');
+        $record = $this->findRepair($booking);
+        abort_unless($this->key($record) === 'in_progress', 422, 'Only a repair in progress can be marked completed.');
+        DB::transaction(function () use ($record, $request): void {
+            $record->update([
+                'repair_status' => 'completed',
+                'repair_completed_at' => now(),
+                'repair_completed_by' => $request->user()->name,
+                'booking_status' => 'completed',
+            ]);
+        });
+        return $this->done($booking, 'The repair was completed and is ready for customer pickup.', 'records');
     }
 
     public function markClaimed(Request $request, string $booking): RedirectResponse
     {
-        $repair = $this->currentRepair($request, $booking);
-
-        if ($repair['repair_status']['key'] !== 'completed') {
-            return $this->transitionRejected($booking, 'Only a completed repair can be marked as claimed.', 'records');
-        }
-
-        $this->storeTransition($request, $booking, [
-            'repair_status' => $this->status('claimed'),
-            'claimed_at' => now(),
-            'claimed_by' => $this->managerName(),
-        ]);
-
-        return $this->transitionAccepted($booking, 'The bike was marked as claimed.', 'records');
+        $record = $this->findRepair($booking);
+        abort_unless($this->key($record) === 'completed', 422, 'Only a completed repair can be marked as claimed.');
+        $record->update(['repair_status' => 'claimed', 'repair_claimed_at' => now(), 'repair_claimed_by' => $request->user()->name]);
+        return $this->done($booking, 'The bike was marked as claimed.', 'records');
     }
 
-    private function currentRepair(Request $request, string $booking): array
+    private function findRepair(string $reference): Booking
     {
-        $repair = $this->repairRecords()->firstWhere('reference', $booking);
-        abort_unless($repair, 404);
-
-        return array_replace(
-            $repair,
-            $request->session()->get("manager_repair_status_overrides.{$booking}", []),
-        );
+        return Booking::query()->with('payment')->where('reference', $reference)
+            ->whereIn('booking_status', ['confirmed', 'completed'])->firstOrFail();
     }
 
-    private function storeTransition(Request $request, string $booking, array $changes): void
+    private function key(Booking $booking): string
     {
-        // Temporary session persistence keeps the frontend contract testable.
-        // Replace this with the authorized BookingStatusManager and persistent audit log.
-        $existing = $request->session()->get("manager_repair_status_overrides.{$booking}", []);
-        $request->session()->put("manager_repair_status_overrides.{$booking}", array_replace($existing, $changes));
+        return $booking->repair_status ?? 'awaiting_arrival';
     }
 
-    private function transitionAccepted(string $booking, string $message, string $tab = 'active'): RedirectResponse
+    private function record(Booking $booking): array
     {
-        return redirect()
-            ->route('manager.repairs.index', ['tab' => $tab, 'repair' => $booking])
-            ->with('repair_notice', "{$booking}: {$message}");
-    }
+        $key = $this->key($booking);
+        $repairLabels = self::LABELS;
+        $status = ['key' => $key, 'label' => $repairLabels[$key] ?? 'Awaiting arrival'];
+        $customerName = $booking->customer_name;
+        $paymentKey = $booking->payment_status === 'paid' ? 'successful' : $booking->payment_status;
+        $at = $booking->appointment_at->setTimezone(config('booking.timezone'));
 
-    private function transitionRejected(string $booking, string $message, string $tab = 'active'): RedirectResponse
-    {
-        return redirect()
-            ->route('manager.repairs.index', ['tab' => $tab, 'repair' => $booking])
-            ->with('repair_notice', $message);
-    }
-
-    private function repairRecords(): Collection
-    {
-        return collect([
-            $this->record('PDL-1052', 'Ana Reyes', 'AR', 'ana.reyes@example.com', '+63 917 000 1052', 'Safety inspection', 'The bike feels unstable during sharp turns and the front brake lever feels loose.', now()->setTime(15, 0), 'successful', 'awaiting_arrival'),
-            $this->record('PDL-1042', 'Paolo Tan', 'PT', 'paolo.tan@example.com', '+63 917 000 1042', 'Brake inspection', 'The rear brake makes a grinding sound and takes longer than usual to stop.', now()->setTime(11, 30), 'pending', 'at_shop', ['arrived_at' => now()->setTime(10, 45), 'arrived_by' => 'Elmer Daniel']),
-            $this->record('PDL-1051', 'Nico Santos', 'NS', 'nico.santos@example.com', '+63 917 000 1051', 'Wheel alignment', 'The front wheel pulls to the left after hitting a pothole.', now()->setTime(13, 30), 'successful', 'at_shop', ['arrived_at' => now()->setTime(12, 50), 'arrived_by' => 'Elmer Daniel']),
-            $this->record('PDL-1041', 'Lia Mendoza', 'LM', 'lia.mendoza@example.com', '+63 917 000 1041', 'General tune-up', 'The chain slips while climbing and there is a clicking sound near the crank.', now()->setTime(9, 0), 'successful', 'in_progress', ['arrived_at' => now()->setTime(8, 42), 'arrived_by' => 'Elmer Daniel', 'started_at' => now()->setTime(9, 10), 'started_by' => 'Elmer Daniel']),
-            $this->record('PDL-1038', 'Rafi Gomez', 'RG', 'rafi.gomez@example.com', '+63 917 000 1038', 'Drivetrain repair', 'Pedaling becomes rough in higher gears and the chain occasionally drops.', now()->subDay()->setTime(14, 0), 'successful', 'in_progress', ['arrived_at' => now()->subDay()->setTime(13, 35), 'arrived_by' => 'Elmer Daniel', 'started_at' => now()->subDay()->setTime(14, 15), 'started_by' => 'Elmer Daniel']),
-            $this->record('PDL-1039', 'Mia Flores', 'MF', 'mia.flores@example.com', '+63 917 000 1039', 'General tune-up', 'Please check the loose crank and the clicking sound near the pedals.', now()->subDays(2)->setTime(11, 0), 'successful', 'completed', ['arrived_at' => now()->subDays(2)->setTime(10, 40), 'arrived_by' => 'Elmer Daniel', 'started_at' => now()->subDays(2)->setTime(11, 10), 'started_by' => 'Elmer Daniel', 'completed_at' => now()->setTime(10, 5), 'completed_by' => 'Elmer Daniel']),
-            $this->record('PDL-1037', 'Noah Ramos', 'NR', 'noah.ramos@example.com', '+63 917 000 1037', 'Brake inspection', null, now()->subDays(4)->setTime(10, 30), 'successful', 'claimed', ['arrived_at' => now()->subDays(4)->setTime(10, 5), 'arrived_by' => 'Elmer Daniel', 'started_at' => now()->subDays(4)->setTime(10, 40), 'started_by' => 'Elmer Daniel', 'completed_at' => now()->subDays(3)->setTime(15, 20), 'completed_by' => 'Elmer Daniel', 'claimed_at' => now()->subDays(2)->setTime(9, 15), 'claimed_by' => 'Elmer Daniel']),
-        ]);
-    }
-
-    private function record(string $reference, string $name, string $initials, string $email, string $phone, string $service, ?string $notes, mixed $appointmentAt, string $paymentStatus, string $repairStatus, array $events = []): array
-    {
-        return array_replace([
-            'reference' => $reference,
-            'customer' => compact('name', 'initials', 'email', 'phone'),
-            'service' => $service,
-            'notes' => $notes,
-            'appointment_at' => $appointmentAt,
-            'booking_status' => ['key' => 'confirmed', 'label' => 'Confirmed'],
-            'payment_status' => ['key' => $paymentStatus, 'label' => Str::headline($paymentStatus)],
-            'calendar_status' => ['key' => 'synchronized', 'label' => 'Synchronized'],
-            'repair_status' => $this->status($repairStatus),
-            'arrived_at' => null,
-            'arrived_by' => null,
-            'started_at' => null,
-            'started_by' => null,
-            'completed_at' => null,
-            'completed_by' => null,
-            'claimed_at' => null,
-            'claimed_by' => null,
-        ], $events);
-    }
-
-    private function status(string $key): array
-    {
-        return ['key' => $key, 'label' => self::STATUS_LABELS[$key]];
+        return [
+            'id' => $booking->id,
+            'reference' => $booking->reference,
+            'created_at' => $booking->created_at?->setTimezone(config('booking.timezone')),
+            'customer' => ['name' => $customerName, 'initials' => $this->initials($customerName), 'email' => $booking->customer_email, 'phone' => $booking->customer_mobile_number],
+            'service' => $booking->service?->name ?? 'Repair service',
+            'notes' => $booking->bike_notes,
+            'appointment_at' => $at,
+            'booking_status' => ['key' => $booking->booking_status, 'label' => Str::headline($booking->booking_status)],
+            'payment_status' => ['key' => $paymentKey, 'label' => $paymentKey === 'successful' ? 'Successful' : Str::headline($paymentKey)],
+            'calendar_status' => ['key' => $booking->calendar_status ?? 'not_applicable', 'label' => Str::headline(str_replace('_', ' ', $booking->calendar_status ?? 'not_applicable'))],
+            'repair_status' => $status,
+            'arrived_at' => $booking->repair_arrived_at?->setTimezone(config('booking.timezone')),
+            'arrived_by' => $booking->repair_arrived_by,
+            'started_at' => $booking->repair_started_at?->setTimezone(config('booking.timezone')),
+            'started_by' => $booking->repair_started_by,
+            'completed_at' => $booking->repair_completed_at?->setTimezone(config('booking.timezone')),
+            'completed_by' => $booking->repair_completed_by,
+            'claimed_at' => $booking->repair_claimed_at?->setTimezone(config('booking.timezone')),
+            'claimed_by' => $booking->repair_claimed_by,
+        ];
     }
 
     private function auditEvents(array $repair): Collection
     {
         $events = collect([
-            ['label' => 'Booking confirmed', 'detail' => 'The appointment became eligible for workshop scheduling.', 'at' => $repair['appointment_at']->copy()->subDays(2), 'tone' => 'confirmed'],
-            ['label' => 'Appointment scheduled', 'detail' => 'The confirmed appointment is linked to Google Calendar.', 'at' => $repair['appointment_at']->copy()->subDay(), 'tone' => 'synchronized'],
+            ['label' => 'Booking received', 'detail' => 'Appointment request saved in Pedalya.', 'at' => $repair['created_at'], 'tone' => 'confirmed'],
         ]);
-
         foreach ([
             ['at' => 'arrived_at', 'by' => 'arrived_by', 'label' => 'Bike arrived at shop', 'tone' => 'at-shop'],
             ['at' => 'started_at', 'by' => 'started_by', 'label' => 'Repair work started', 'tone' => 'in-progress'],
@@ -261,21 +177,16 @@ class RepairsController extends Controller
             ['at' => 'claimed_at', 'by' => 'claimed_by', 'label' => 'Bike claimed by customer', 'tone' => 'claimed'],
         ] as $event) {
             if ($repair[$event['at']]) {
-                $events->push([
-                    'label' => $event['label'],
-                    'detail' => 'Recorded by '.($repair[$event['by']] ?? 'an authorized manager').'.',
-                    'at' => $repair[$event['at']],
-                    'tone' => $event['tone'],
-                ]);
+                $events->push(['label' => $event['label'], 'detail' => 'Recorded by '.($repair[$event['by']] ?? 'a manager').'.', 'at' => $repair[$event['at']], 'tone' => $event['tone']]);
             }
         }
-
         return $events->sortByDesc('at')->values();
     }
 
-    private function managerName(): string
+    private function done(string $reference, string $message, string $tab = 'active'): RedirectResponse
     {
-        return auth()->user()?->name ?? 'Elmer Daniel';
+        return redirect()->route('manager.repairs.index', ['tab' => $tab, 'repair' => $reference])
+            ->with('repair_notice', "{$reference}: {$message}");
     }
 
     private function initials(string $name): string
