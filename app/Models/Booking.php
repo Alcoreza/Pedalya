@@ -56,4 +56,9 @@ class Booking extends Model
     {
         return $this->hasOne(Payment::class);
     }
+
+    public function repair(): HasOne
+    {
+        return $this->hasOne(Repair::class);
+    }
 }

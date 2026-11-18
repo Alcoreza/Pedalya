@@ -12,7 +12,7 @@ class BookingsController extends Controller
     {
         $bookings = $request->user()
             ->bookings()
-            ->with(['service', 'payment'])
+            ->with(['service', 'payment', 'repair'])
             ->orderByDesc('appointment_at')
             ->get();
 
@@ -22,7 +22,8 @@ class BookingsController extends Controller
                 'total' => $bookings->count(),
                 'attention' => $bookings->filter(fn ($booking) => in_array($booking->booking_status, ['pending', 'rejected', 'cancelled'], true)
                     || $booking->payment_status === 'pending')->count(),
-                'completed' => $bookings->where('booking_status', 'completed')->count(),
+                'completed' => $bookings->filter(fn ($booking) => $booking->booking_status === 'completed'
+                    || in_array($booking->repair?->status, ['completed', 'claimed'], true))->count(),
             ],
         ]);
     }
