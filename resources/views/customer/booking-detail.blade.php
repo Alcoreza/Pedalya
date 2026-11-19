@@ -49,7 +49,7 @@
                 <article class="detail-card detail-status-card">
                     <div class="detail-card-heading"><div><span>Status overview</span><h2>Your booking at a glance</h2></div></div>
                     <div class="status-overview">
-                        @foreach ([['label' => 'Calendar', 'value' => $calendarLabel], ['label' => 'Booking', 'value' => $bookingLabel], ['label' => 'Payment', 'value' => $paymentLabel], ['label' => 'Repair', 'value' => $repairLabel]] as $status)
+                        @foreach (array_filter([['label' => 'Calendar', 'value' => $calendarLabel], ['label' => 'Booking', 'value' => $bookingLabel], ['label' => 'Payment', 'value' => $paymentLabel], ['label' => 'Repair', 'value' => $repairLabel]], fn (array $status): bool => $booking->booking_status !== 'rejected' || $status['label'] !== 'Payment') as $status)
                             <div><span class="record-status {{ in_array($status['value'], ['Paid', 'Confirmed', 'Completed', 'Synchronized', 'Bike at shop', 'Repair completed', 'Bike claimed'], true) ? 'status-success' : 'status-pending' }}"><i></i>{{ $status['value'] }}</span><small>{{ $status['label'] }}</small></div>
                         @endforeach
                     </div>
@@ -62,13 +62,18 @@
                 </article>
             </div>
             <aside class="detail-side-column" aria-label="Booking summary and payment">
-                <article class="detail-card detail-summary-card"><div class="detail-card-heading"><div><span>Booking summary</span><h2>Your service</h2></div></div>
+                <article class="detail-card detail-summary-card" data-booking-status="{{ $booking->booking_status }}"><div class="detail-card-heading"><div><span>Booking summary</span><h2>Your service</h2></div></div>
                     <dl><div><dt>Reference</dt><dd>{{ $booking->reference }}</dd></div><div><dt>Service</dt><dd>{{ $booking->service?->name ?? 'Repair service' }}</dd></div><div><dt>Estimated total</dt><dd class="detail-total">₱{{ number_format((float) $booking->service_price, 2) }}</dd></div></dl>
-                    <div class="detail-payment-note"><span class="detail-payment-label">Payment status</span><strong>{{ $paymentLabel }}</strong><span>{{ $booking->payment?->paid_at ? 'Paid '.$booking->payment->paid_at->setTimezone(config('booking.timezone'))->format('M j, Y · g:i A') : 'Payment information is linked to this booking.' }}</span>
+                    @if ($booking->booking_status !== 'rejected')
+                        <div class="detail-payment-note"><span class="detail-payment-label">Payment status</span><strong>{{ $paymentLabel }}</strong><span>{{ $booking->payment?->paid_at ? 'Paid '.$booking->payment->paid_at->setTimezone(config('booking.timezone'))->format('M j, Y · g:i A') : 'Payment information is linked to this booking.' }}</span>
                         @if ($booking->payment_status !== 'paid' && ! ($booking->booking_status === 'pending' && $booking->processing_method === 'review_required') && $booking->booking_status !== 'rejected')<a href="{{ route('customer.payment', $booking->reference) }}"><span>Review payment options</span><span aria-hidden="true">→</span></a>@endif
-                    </div><p class="detail-summary-help">Your booking reference keeps your appointment, payment, and repair updates together.</p>
+                    </div>
+                    @endif
+                    <p class="detail-summary-help">Your booking reference keeps your appointment, payment, and repair updates together.</p>
                 </article>
-                <a class="booking-next detail-repair-link" href="{{ route('customer.repair', $booking->reference) }}">View repair progress <span aria-hidden="true">→</span></a>
+                @if ($booking->booking_status !== 'rejected')
+                    <a class="booking-next detail-repair-link" href="{{ route('customer.repair', $booking->reference) }}">View repair progress <span aria-hidden="true">→</span></a>
+                @endif
             </aside>
         </div>
     </main>

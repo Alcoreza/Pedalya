@@ -183,6 +183,7 @@
     padding: 1rem;
 }
 .customer-detail-page .detail-payment-note strong { color: var(--color-brand-dark); }
+.customer-detail-page .detail-summary-card[data-booking-status="rejected"] .detail-payment-note { display: none; }
 .customer-detail-page .detail-payment-note .detail-payment-label { font-size: .65rem; text-transform: uppercase; letter-spacing: .08em; }
 .customer-detail-page .detail-payment-note a { background: var(--color-brand); border-color: var(--color-brand); font-weight: 600; }
 .customer-detail-page .detail-payment-note a span { color: inherit; font-size: inherit; }

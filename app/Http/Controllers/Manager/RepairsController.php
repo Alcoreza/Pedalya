@@ -220,6 +220,13 @@ class RepairsController extends Controller
             ->with('repair_notice', $message);
     }
 
+    private function transitionAccepted(string $booking, string $message, string $tab = 'active'): RedirectResponse
+    {
+        return redirect()
+            ->route('manager.repairs.index', ['tab' => $tab, 'repair' => $booking])
+            ->with('repair_notice', "{$booking}: {$message}");
+    }
+
     /** Every repair of a confirmed (or completed) booking, as view-contract arrays. */
     private function repairRecords(): Collection
     {

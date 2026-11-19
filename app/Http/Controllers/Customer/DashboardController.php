@@ -12,7 +12,11 @@ class DashboardController extends Controller
     public function __invoke(Request $request): View
     {
         $user = $request->user();
-        $bookings = $user->bookings()->with(['service', 'repair'])->orderByDesc('created_at')->get();
+        $bookings = $user->bookings()
+            ->with(['service', 'repair'])
+            ->orderByDesc('appointment_at')
+            ->orderByDesc('id')
+            ->get();
         $isRepairComplete = fn ($booking): bool => $booking->booking_status === 'completed'
             || in_array($booking->repair?->status, ['completed', 'claimed'], true);
         $activeBookings = $bookings->filter(fn ($booking): bool => !$isRepairComplete($booking)
