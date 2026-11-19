@@ -32,8 +32,14 @@ class DashboardController extends Controller
         $repairStatuses = ManagerPresenter::repairStatuses($todayBookings->pluck('id'));
 
         $confirmedToday = $todayBookings->count();
-        $upcoming = $todayBookings->filter(fn (Booking $booking): bool => $booking->appointment_at->gt($dashboardDate))->count();
-        $dailyCapacity = max(0, (int) config('booking.daily_capacity', 8));
+        $upcoming = Booking::query()
+            ->where('booking_status', 'confirmed')
+            ->where('appointment_at', '>', $dashboardDate->copy()->utc()->toIso8601String())
+            ->count();
+        // The schedule presents six daily start times. Manager-approved
+        // overlapping appointments can exceed this slot count, so the figure
+        // is a slot reference rather than a hard cap on confirmed bookings.
+        $dailyCapacity = max(1, (int) config('booking.daily_capacity', 6));
 
         $pendingReview = ManagerPresenter::pendingBookings();
         $pendingToday = Booking::query()

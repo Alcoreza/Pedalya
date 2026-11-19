@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
+use App\Models\Booking;
 use App\Models\GoogleCalendarConnection;
 use App\Services\GoogleCalendarService;
+use App\Services\Manager\CalendarSyncRunner;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -15,6 +17,16 @@ class GoogleCalendarConnectionController extends Controller
     public function connect(Request $request): RedirectResponse
     {
         $returnTo = $request->query('return_to') === 'schedule' ? 'schedule' : 'profile';
+        return $this->beginConnection($request, $returnTo);
+    }
+
+    public function connectForManager(Request $request): RedirectResponse
+    {
+        return $this->beginConnection($request, 'manager_schedule');
+    }
+
+    private function beginConnection(Request $request, string $returnTo): RedirectResponse
+    {
         $request->session()->put('google_calendar_return_to', $returnTo);
 
         if (! $this->isConfigured()) {
@@ -30,13 +42,13 @@ class GoogleCalendarConnectionController extends Controller
             'response_type' => 'code',
             'scope' => implode(' ', config('services.google_calendar.scope', [])),
             'access_type' => 'offline',
-            'prompt' => 'consent',
+            'prompt' => $returnTo === 'manager_schedule' ? 'select_account consent' : 'consent',
             'include_granted_scopes' => 'true',
             'state' => $state,
         ]));
     }
 
-    public function callback(Request $request, GoogleCalendarService $calendar): RedirectResponse
+    public function callback(Request $request, GoogleCalendarService $calendar, CalendarSyncRunner $managerCalendar): RedirectResponse
     {
         $returnTo = $request->session()->get('google_calendar_return_to', 'profile');
         $expectedState = (string) $request->session()->pull('google_calendar_oauth_state', '');
@@ -69,6 +81,18 @@ class GoogleCalendarConnectionController extends Controller
             return $this->returnTo($request, $returnTo, 'Google did not return an account email. Please try connecting again.', true);
         }
 
+        if ($returnTo === 'manager_schedule') {
+            $managerEmail = strtolower(trim((string) config('services.google_calendar.manager_email')));
+
+            if ($managerEmail === '') {
+                return $this->returnTo($request, $returnTo, 'Set GOOGLE_CALENDAR_MANAGER_EMAIL in the app environment before connecting the manager calendar.', true);
+            }
+
+            if (! hash_equals($managerEmail, strtolower(trim($googleEmail)))) {
+                return $this->returnTo($request, $returnTo, 'Choose the manager Google account ('.config('services.google_calendar.manager_email').') to connect this calendar.', true);
+            }
+        }
+
         $user = $request->user();
         $connection = $user->googleCalendarConnection;
         $refreshToken = $tokenResponse->json('refresh_token')
@@ -87,6 +111,24 @@ class GoogleCalendarConnectionController extends Controller
                 'scopes' => is_string($grantedScopes) ? $grantedScopes : implode(' ', config('services.google_calendar.scope', [])),
             ],
         );
+
+        if ($returnTo === 'manager_schedule') {
+            $confirmedBookings = Booking::query()
+                ->where('booking_status', 'confirmed')
+                ->with('service')
+                ->orderBy('appointment_at')
+                ->get();
+
+            $confirmedBookings->each(fn (Booking $booking) => $managerCalendar->run($booking, $user));
+            $failedSyncCount = $confirmedBookings
+                ->filter(fn (Booking $booking): bool => $booking->fresh()->manager_calendar_status === 'failed')
+                ->count();
+            $status = $failedSyncCount > 0
+                ? "Google Calendar connected for {$googleEmail}; {$failedSyncCount} confirmed booking(s) need a sync retry."
+                : "Google Calendar connected for {$googleEmail}. Confirmed bookings were synced.";
+
+            return $this->returnTo($request, $returnTo, $status);
+        }
 
         $upcomingBookings = $user->bookings()
             ->where('appointment_at', '>=', now())
@@ -112,6 +154,13 @@ class GoogleCalendarConnectionController extends Controller
         return redirect()->route('customer.profile')->with('status', 'Google Calendar was disconnected. Existing events in your Google Calendar were left unchanged.');
     }
 
+    public function disconnectForManager(Request $request): RedirectResponse
+    {
+        $request->user()->googleCalendarConnection()->delete();
+
+        return redirect()->route('manager.schedule.index')->with('schedule_notice', 'Your Google Calendar account was disconnected. Existing events were left unchanged.');
+    }
+
     private function isConfigured(): bool
     {
         return filled(config('services.google_calendar.client_id'))
@@ -122,8 +171,14 @@ class GoogleCalendarConnectionController extends Controller
     private function returnTo(Request $request, string $returnTo, string $message, bool $isError = false): RedirectResponse
     {
         $request->session()->forget('google_calendar_return_to');
-        $route = $returnTo === 'schedule' ? 'customer.schedule' : 'customer.profile';
-        $flashKey = $isError ? 'calendar_error' : ($returnTo === 'schedule' ? 'calendar_message' : 'status');
+        $route = match ($returnTo) {
+            'schedule' => 'customer.schedule',
+            'manager_schedule' => 'manager.schedule.index',
+            default => 'customer.profile',
+        };
+        $flashKey = $returnTo === 'manager_schedule'
+            ? 'schedule_notice'
+            : ($isError ? 'calendar_error' : ($returnTo === 'schedule' ? 'calendar_message' : 'status'));
 
         $redirect = redirect()->route($route)->with($flashKey, $message);
 

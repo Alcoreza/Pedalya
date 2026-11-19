@@ -95,6 +95,19 @@
                     </div>
 
                     <div class="topbar-actions">
+                        @if ($managerCalendarConnection)
+                            <div class="topbar-calendar-connection" aria-label="Google Calendar connected">
+                                <span class="topbar-calendar-status"><span aria-hidden="true"></span>Connected</span>
+                                <span class="topbar-calendar-email">{{ $managerCalendarConnection->google_email }}</span>
+                            </div>
+                            <form method="POST" action="{{ route('manager.calendar.disconnect') }}">
+                                @csrf
+                                @method('DELETE')
+                                <button class="topbar-calendar-disconnect" type="submit">Disconnect</button>
+                            </form>
+                        @else
+                            <a class="topbar-calendar-connect" href="{{ route('manager.calendar.connect') }}">Connect Google Calendar <span aria-hidden="true">&#8599;</span></a>
+                        @endif
                         <a class="topbar-primary" href="{{ route('manager.bookings.index') }}">Review bookings <span aria-hidden="true">↗</span></a>
                     </div>
                 </header>

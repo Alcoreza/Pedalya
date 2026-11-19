@@ -331,7 +331,26 @@ body.manager-dashboard-page {
     display: flex;
     align-items: center;
     gap: 0.55rem;
+    flex-wrap: wrap;
 }
+
+.topbar-actions form { margin: 0; }
+.topbar-calendar-connection {
+    display: grid;
+    gap: 0.16rem;
+    min-width: 0;
+    padding: 0.48rem 0.72rem;
+    border: 1px solid rgba(31, 100, 84, 0.14);
+    border-radius: 0.75rem;
+    background: rgba(236, 248, 222, 0.62);
+}
+
+.topbar-calendar-status { display: inline-flex; align-items: center; gap: 0.38rem; color: var(--color-brand); font-size: 0.58rem; font-weight: 800; }
+.topbar-calendar-status > span { width: 0.42rem; height: 0.42rem; border-radius: 50%; background: #27865a; box-shadow: 0 0 0 0.18rem rgba(39, 134, 90, 0.1); }
+.topbar-calendar-email { max-width: 13rem; overflow: hidden; color: var(--color-ink-soft); font-size: 0.55rem; text-overflow: ellipsis; white-space: nowrap; }
+.topbar-calendar-disconnect,.topbar-calendar-connect { display: inline-flex; min-height: 2.4rem; align-items: center; justify-content: center; gap: 0.45rem; padding: 0 0.95rem; border: 1px solid rgba(201, 240, 108, 0.48); border-radius: 999px; background: var(--color-brand-deep); color: var(--color-accent); font: inherit; font-size: 0.65rem; font-weight: 800; text-decoration: none; cursor: pointer; transition: background-color 180ms ease, border-color 180ms ease, transform 180ms ease; }
+.topbar-calendar-disconnect:hover,.topbar-calendar-connect:hover { transform: translateY(-1px); border-color: var(--color-accent); background: #123b32; }
+.topbar-calendar-connect span { color: var(--color-accent); }
 
 .icon-button {
     position: relative;

@@ -8,6 +8,7 @@ use App\Models\Payment;
 use App\Models\Service;
 use App\Services\Bookings\BookingAvailabilityService;
 use App\Services\GoogleCalendarService;
+use App\Services\Manager\CalendarSyncRunner;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,6 +22,7 @@ class BookingFlowController extends Controller
     public function __construct(
         private readonly BookingAvailabilityService $availability,
         private readonly GoogleCalendarService $googleCalendar,
+        private readonly CalendarSyncRunner $managerCalendar,
     )
     {
     }
@@ -209,6 +211,7 @@ class BookingFlowController extends Controller
 
         if ($booking->booking_status === 'confirmed') {
             $this->googleCalendar->syncBooking($booking);
+            $this->managerCalendar->run($booking, $request->user());
         }
 
         $request->session()->forget('booking_flow');

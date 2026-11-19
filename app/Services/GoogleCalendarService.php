@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Booking;
+use App\Models\GoogleCalendarConnection;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
@@ -15,15 +16,66 @@ class GoogleCalendarService
         $booking->loadMissing(['user.googleCalendarConnection', 'service']);
         $connection = $booking->user?->googleCalendarConnection;
 
-        if (! $connection || $booking->calendar_event_id) {
+        $this->syncToConnection(
+            $booking,
+            $connection,
+            'calendar_status',
+            'calendar_event_id',
+            'calendar_sync_attempts',
+            'pedalya-customer:',
+        );
+    }
+
+    public function syncBookingToManager(Booking $booking): void
+    {
+        if ($booking->booking_status !== 'confirmed') {
             return;
         }
 
-        $booking->update(['calendar_status' => 'pending']);
+        $this->syncToConnection(
+            $booking,
+            $this->managerConnection(),
+            'manager_calendar_status',
+            'manager_calendar_event_id',
+            'manager_calendar_sync_attempts',
+            'pedalya-manager:',
+        );
+    }
+
+    public function managerConnection(): ?GoogleCalendarConnection
+    {
+        $managerEmail = config('services.google_calendar.manager_email');
+
+        if (! filled($managerEmail)) {
+            return null;
+        }
+
+        return GoogleCalendarConnection::query()
+            ->whereRaw('lower(google_email) = ?', [strtolower(trim($managerEmail))])
+            ->whereHas('user', fn ($query) => $query->where('role', 'manager'))
+            ->orderBy('user_id')
+            ->first();
+    }
+
+    private function syncToConnection(
+        Booking $booking,
+        ?GoogleCalendarConnection $connection,
+        string $statusColumn,
+        string $eventColumn,
+        string $attemptsColumn,
+        string $eventNamespace,
+    ): void {
+        $booking->loadMissing('service');
+
+        if (! $connection || $booking->{$eventColumn}) {
+            return;
+        }
+
+        $booking->forceFill([$statusColumn => 'pending'])->save();
 
         try {
             $accessToken = $this->accessToken($connection->refresh_token);
-            $eventId = hash('sha256', 'pedalya:'.$booking->reference);
+            $eventId = hash('sha256', $eventNamespace.$booking->reference);
             $startsAt = $booking->appointment_at->setTimezone(config('booking.timezone', 'Asia/Manila'));
             $endsAt = $startsAt->addMinutes((int) $booking->duration_minutes);
             $location = 'Lucban-Sampaloc Road, Lucban, Quezon';
@@ -62,16 +114,18 @@ class GoogleCalendarService
                 throw new RuntimeException('Google Calendar did not return a saved event.');
             }
 
-            $booking->update([
-                'calendar_status' => 'synchronized',
-                'calendar_event_id' => $response->json('id'),
-                'calendar_sync_attempts' => (int) $booking->calendar_sync_attempts + 1,
+            $booking->forceFill([
+                $statusColumn => 'synchronized',
+                $eventColumn => $response->json('id'),
+                $attemptsColumn => (int) $booking->{$attemptsColumn} + 1,
             ]);
+            $booking->save();
         } catch (Throwable $exception) {
-            $booking->update([
-                'calendar_status' => 'failed',
-                'calendar_sync_attempts' => (int) $booking->calendar_sync_attempts + 1,
+            $booking->forceFill([
+                $statusColumn => 'failed',
+                $attemptsColumn => (int) $booking->{$attemptsColumn} + 1,
             ]);
+            $booking->save();
 
             Log::warning('Google Calendar booking sync failed.', [
                 'booking_reference' => $booking->reference,

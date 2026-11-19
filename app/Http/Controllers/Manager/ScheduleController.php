@@ -63,9 +63,16 @@ class ScheduleController extends Controller
         $selectedReference = $validated['booking'] ?? null;
         $selectedAppointment = $appointments->firstWhere('reference', $selectedReference)
             ?? $appointments->sortBy('appointment_at')->first();
+        $managerCalendarConnection = $request->user()->googleCalendarConnection;
+        $expectedManagerEmail = (string) config('services.google_calendar.manager_email', '');
+        $managerCalendarConnection = $managerCalendarConnection
+            && strcasecmp($managerCalendarConnection->google_email, $expectedManagerEmail) === 0
+                ? $managerCalendarConnection
+                : null;
 
         return view('manager.schedule', [
             'manager' => ManagerPresenter::manager($request->user()),
+            'managerCalendarConnection' => $managerCalendarConnection,
             'navigation' => [
                 'pending_bookings' => ManagerPresenter::pendingBookings(),
             ],
@@ -107,16 +114,16 @@ class ScheduleController extends Controller
                 return 'Calendar follow-up is only available for confirmed bookings.';
             }
 
-            if ($locked->calendar_status !== 'failed') {
+            if ($locked->manager_calendar_status !== 'failed') {
                 return "Calendar follow-up for {$locked->reference} is not needed right now.";
             }
 
-            if ((int) $locked->calendar_sync_attempts >= CalendarSyncRunner::MAX_ATTEMPTS) {
+            if ((int) $locked->manager_calendar_sync_attempts >= CalendarSyncRunner::MAX_ATTEMPTS) {
                 return 'The retry limit was reached. Contact support to link this appointment manually.';
             }
 
-            $next = (int) $locked->calendar_sync_attempts + 1;
-            $locked->forceFill(['calendar_status' => 'pending'])->save();
+            $next = (int) $locked->manager_calendar_sync_attempts + 1;
+            $locked->forceFill(['manager_calendar_status' => 'pending'])->save();
 
             ActivityLogger::record(
                 eventKey: 'calendar.retry.queued',

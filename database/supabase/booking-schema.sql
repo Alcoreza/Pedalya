@@ -58,6 +58,10 @@ CREATE TABLE IF NOT EXISTS public.bookings (
         CHECK (calendar_status IN ('not_applicable', 'pending', 'synchronized', 'failed')),
     calendar_event_id text,
     calendar_sync_attempts smallint NOT NULL DEFAULT 0 CHECK (calendar_sync_attempts >= 0),
+    manager_calendar_status text NOT NULL DEFAULT 'not_applicable'
+        CHECK (manager_calendar_status IN ('not_applicable', 'pending', 'synchronized', 'failed')),
+    manager_calendar_event_id text,
+    manager_calendar_sync_attempts smallint NOT NULL DEFAULT 0 CHECK (manager_calendar_sync_attempts >= 0),
     repair_status text CHECK (repair_status IS NULL OR repair_status IN ('awaiting_arrival', 'at_shop', 'in_progress', 'completed', 'claimed')),
     repair_arrived_at timestamptz,
     repair_arrived_by text,
@@ -82,6 +86,14 @@ ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS repair_completed_at timesta
 ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS repair_completed_by text;
 ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS repair_claimed_at timestamptz;
 ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS repair_claimed_by text;
+ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS manager_calendar_status text NOT NULL DEFAULT 'not_applicable';
+ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS manager_calendar_event_id text;
+ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS manager_calendar_sync_attempts smallint NOT NULL DEFAULT 0;
+DO $$ BEGIN
+    ALTER TABLE public.bookings ADD CONSTRAINT bookings_manager_calendar_status_check
+        CHECK (manager_calendar_status IN ('not_applicable', 'pending', 'synchronized', 'failed'));
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 DO $$ BEGIN
     ALTER TABLE public.bookings ADD CONSTRAINT bookings_repair_status_check
         CHECK (repair_status IS NULL OR repair_status IN ('awaiting_arrival', 'at_shop', 'in_progress', 'completed', 'claimed'));

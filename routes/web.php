@@ -43,7 +43,6 @@ Route::middleware(['auth', 'role:customer'])->group(function () {
     Route::get('/customer/bookings/{reference}/payment', [BookingPaymentController::class, 'show'])->name('customer.payment');
     Route::get('/customer/dashboard', CustomerDashboardController::class)->name('customer.dashboard');
     Route::get('/customer/calendar/connect', [GoogleCalendarConnectionController::class, 'connect'])->name('customer.calendar.connect');
-    Route::get('/customer/calendar/callback', [GoogleCalendarConnectionController::class, 'callback'])->name('customer.calendar.callback');
     Route::delete('/customer/calendar/disconnect', [GoogleCalendarConnectionController::class, 'disconnect'])->name('customer.calendar.disconnect');
     Route::post('/book/confirmation/{reference}/checkout', [MayaCheckoutController::class, 'start'])->name('customer.checkout');
     Route::get('/payments/{payment}/success', [PaymentResultController::class, 'success'])->name('customer.payment.success');
@@ -51,6 +50,8 @@ Route::middleware(['auth', 'role:customer'])->group(function () {
 });
 
 Route::post('/webhooks/maya', MayaWebhookController::class)->name('webhooks.maya');
+Route::get('/customer/calendar/callback', [GoogleCalendarConnectionController::class, 'callback'])
+    ->middleware('auth')->name('customer.calendar.callback');
 
 Route::redirect('/customer', '/customer/dashboard');
 Route::get('/customer/profile', [ProfileController::class, 'edit'])->middleware('auth')->name('customer.profile');
@@ -60,6 +61,8 @@ Route::prefix('manager')->name('manager.')->middleware(['auth', 'role:manager'])
     Route::get('/bookings', [BookingsController::class, 'index'])->name('bookings.index');
     Route::post('/bookings/{booking}/decision', [BookingsController::class, 'decide'])->name('bookings.decision');
     Route::get('/schedule', [ScheduleController::class, 'index'])->name('schedule.index');
+    Route::get('/calendar/connect', [GoogleCalendarConnectionController::class, 'connectForManager'])->name('calendar.connect');
+    Route::delete('/calendar/disconnect', [GoogleCalendarConnectionController::class, 'disconnectForManager'])->name('calendar.disconnect');
     Route::post('/schedule/{booking}/calendar-sync', [ScheduleController::class, 'retryCalendarSync'])->name('schedule.calendar-sync.retry');
     Route::get('/repairs', [RepairsController::class, 'index'])->name('repairs.index');
     Route::post('/repairs/{booking}/arrive', [RepairsController::class, 'markArrived'])->name('repairs.arrive');

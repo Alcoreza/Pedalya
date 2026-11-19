@@ -11,9 +11,9 @@ use Throwable;
  * Runs one Google Calendar synchronization attempt for a confirmed booking.
  *
  * - Never reverses the booking confirmation.
- * - Skips creation when calendar_event_id already exists (duplicate guard).
+ * - Writes into the connected manager account with a separate duplicate guard.
  * - Counts exactly one attempt per run, whether or not
- *   GoogleCalendarService::syncBooking() also counts it.
+ *   GoogleCalendarService also counts it.
  * - Logs the outcome to activity_events. No error messages or tokens are logged.
  */
 final class CalendarSyncRunner
@@ -28,10 +28,14 @@ final class CalendarSyncRunner
     public function run(Booking $booking, ?User $actor = null): string
     {
         $booking->refresh();
-        $before = (int) $booking->calendar_sync_attempts;
+        if ($booking->booking_status !== 'confirmed' || ! $this->calendar->managerConnection()) {
+            return 'not_applicable';
+        }
 
-        if (filled($booking->calendar_event_id)) {
-            $booking->forceFill(['calendar_status' => 'synchronized'])->save();
+        $before = (int) $booking->manager_calendar_sync_attempts;
+
+        if (filled($booking->manager_calendar_event_id)) {
+            $booking->forceFill(['manager_calendar_status' => 'synchronized'])->save();
             $this->log($booking, 'calendar.sync.completed', 'successful', $before);
 
             return 'synchronized';
@@ -40,7 +44,7 @@ final class CalendarSyncRunner
         $errored = false;
 
         try {
-            $this->calendar->syncBooking($booking);
+            $this->calendar->syncBookingToManager($booking);
             $booking->refresh();
         } catch (Throwable $e) {
             report($e);
@@ -48,14 +52,14 @@ final class CalendarSyncRunner
             $booking->refresh();
         }
 
-        $attempts = max((int) $booking->calendar_sync_attempts, $before + 1);
-        $status = $booking->calendar_status;
+        $attempts = max((int) $booking->manager_calendar_sync_attempts, $before + 1);
+        $status = $booking->manager_calendar_status;
 
         if ($errored && $status !== 'synchronized') {
             $status = 'failed';
         }
 
-        $booking->forceFill(['calendar_sync_attempts' => $attempts, 'calendar_status' => $status])->save();
+        $booking->forceFill(['manager_calendar_sync_attempts' => $attempts, 'manager_calendar_status' => $status])->save();
 
         if ($status === 'synchronized') {
             $this->log($booking, 'calendar.sync.completed', 'successful', $attempts);
@@ -76,7 +80,7 @@ final class CalendarSyncRunner
             result: $result,
             title: $synced ? 'Calendar event synchronized' : 'Calendar synchronization failed',
             summary: $synced
-                ? 'The confirmed appointment was linked to the shop calendar.'
+                ? 'The confirmed appointment was linked to the manager Google Calendar.'
                 : 'The confirmed booking remains valid and needs calendar follow-up.',
             detail: $synced
                 ? 'The provider event ID was stored against the booking after successful event creation.'
@@ -85,12 +89,12 @@ final class CalendarSyncRunner
             metadata: array_filter([
                 'Attempt' => $attempt.' of '.self::MAX_ATTEMPTS,
                 'Calendar status' => $synced ? 'Synchronized' : 'Failed',
-                'Event ID stored' => filled($booking->calendar_event_id) ? 'Yes' : 'No',
+                'Event ID stored' => filled($booking->manager_calendar_event_id) ? 'Yes' : 'No',
                 'Error type' => $errorType,
                 'Next action' => $synced || $attempt >= self::MAX_ATTEMPTS ? null : 'Safe retry',
             ], fn ($v) => $v !== null),
             provider: 'Google Calendar',
-            providerReference: $booking->calendar_event_id,
+            providerReference: $booking->manager_calendar_event_id,
             source: 'system',
         );
     }

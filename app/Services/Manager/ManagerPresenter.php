@@ -104,7 +104,7 @@ final class ManagerPresenter
         $bookingKey = $reviewRequired ? 'review_required' : $booking->booking_status;
         $processingKey = $reviewRequired ? 'review_required' : ($booking->processing_method ?: 'automatic');
         $paymentKey = $booking->payment_status === 'paid' ? 'successful' : $booking->payment_status;
-        $calendarKey = $booking->calendar_status ?: 'not_applicable';
+        $calendarKey = $booking->manager_calendar_status ?: 'not_applicable';
         $name = $booking->customer_name;
 
         return [
@@ -129,7 +129,7 @@ final class ManagerPresenter
             'calendar_status' => ['key' => $calendarKey, 'label' => self::CALENDAR_LABELS[$calendarKey] ?? ucfirst($calendarKey)],
             'repair_status' => $repairStatus ? self::repairStatus($repairStatus) : null,
             'calendar_event_id' => $booking->calendar_event_id,
-            'sync_attempts' => (int) $booking->calendar_sync_attempts,
+            'sync_attempts' => (int) $booking->manager_calendar_sync_attempts,
         ];
     }
 

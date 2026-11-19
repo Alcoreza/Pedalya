@@ -6,6 +6,7 @@ return [
     | settings later without changing the policy output or booking page.
     */
     'default_capacity' => (int) env('BOOKING_DEFAULT_CAPACITY', 1),
+    'daily_capacity' => (int) env('BOOKING_DAILY_CAPACITY', 6),
     'default_duration_minutes' => (int) env('BOOKING_DEFAULT_DURATION', 60),
     'timezone' => env('BOOKING_TIMEZONE', 'Asia/Manila'),
     'opening_time' => env('BOOKING_OPENING_TIME', '09:00'),
