@@ -7,6 +7,7 @@ use App\Models\Booking;
 use App\Models\Repair;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 /**
@@ -15,6 +16,8 @@ use Illuminate\Support\Str;
  */
 final class ManagerPresenter
 {
+    private const PENDING_BOOKINGS_CACHE_KEY = 'manager.pending-bookings-count';
+
     public const BOOKING_LABELS = [
         'review_required' => 'Schedule review', 'confirmed' => 'Confirmed', 'rejected' => 'Rejected',
         'completed' => 'Completed', 'cancelled' => 'Cancelled', 'pending' => 'Pending',
@@ -29,6 +32,11 @@ final class ManagerPresenter
     public const CALENDAR_LABELS = [
         'not_applicable' => 'Not applicable', 'pending' => 'Pending sync',
         'synchronized' => 'Synchronized', 'failed' => 'Failed',
+    ];
+
+    public const SCHEDULE_LABELS = [
+        'confirmed' => 'Confirmed', 'manager_review' => 'Manager review',
+        'not_scheduled' => 'Not scheduled',
     ];
 
     public const REPAIR_LABELS = [
@@ -74,10 +82,25 @@ final class ManagerPresenter
     /** Sidebar badge: bookings waiting for a manager decision. */
     public static function pendingBookings(): int
     {
-        return Booking::query()
-            ->where('booking_status', 'pending')
-            ->where('processing_method', 'review_required')
-            ->count();
+        // This badge is displayed on every manager page. A short cache avoids
+        // repeating the same remote Supabase count on every navigation while
+        // explicit invalidation keeps normal booking decisions immediate.
+        return (int) Cache::remember(self::PENDING_BOOKINGS_CACHE_KEY, 15, fn (): int =>
+            Booking::query()
+                ->where('booking_status', 'pending')
+                ->where('processing_method', 'review_required')
+                ->count()
+        );
+    }
+
+    public static function forgetPendingBookings(): void
+    {
+        Cache::forget(self::PENDING_BOOKINGS_CACHE_KEY);
+    }
+
+    public static function cachePendingBookings(int $count): void
+    {
+        Cache::put(self::PENDING_BOOKINGS_CACHE_KEY, max(0, $count), 15);
     }
 
     /**
@@ -105,6 +128,9 @@ final class ManagerPresenter
         $processingKey = $reviewRequired ? 'review_required' : ($booking->processing_method ?: 'automatic');
         $paymentKey = $booking->payment_status === 'paid' ? 'successful' : $booking->payment_status;
         $calendarKey = $booking->calendar_status ?: 'not_applicable';
+        $scheduleKey = $reviewRequired
+            ? 'manager_review'
+            : ($booking->booking_status === 'confirmed' ? 'confirmed' : 'not_scheduled');
         $name = $booking->customer_name;
 
         return [
@@ -127,6 +153,7 @@ final class ManagerPresenter
             'review_reason' => $booking->review_reason,
             'payment_status' => ['key' => $paymentKey, 'label' => self::PAYMENT_LABELS[$paymentKey] ?? ucfirst($paymentKey)],
             'calendar_status' => ['key' => $calendarKey, 'label' => self::CALENDAR_LABELS[$calendarKey] ?? ucfirst($calendarKey)],
+            'schedule_status' => ['key' => $scheduleKey, 'label' => self::SCHEDULE_LABELS[$scheduleKey]],
             'repair_status' => $repairStatus ? self::repairStatus($repairStatus) : null,
             'calendar_event_id' => $booking->calendar_event_id,
             'sync_attempts' => (int) $booking->calendar_sync_attempts,

@@ -107,6 +107,7 @@
 .sync-legend { display: flex; flex-wrap: wrap; justify-content: end; gap: 0.8rem; color: var(--color-muted); font-size: 0.46rem; }
 .sync-legend span { display: inline-flex; align-items: center; gap: 0.3rem; }
 .sync-legend i, .appointment-card > i, .detail-sync { width: 0.42rem; height: 0.42rem; border-radius: 50%; background: #aab4ae; }
+.sync-legend .schedule-manager-review, .schedule-card-manager_review > i, .detail-schedule-manager-review { background: #7657d6; }
 .sync-legend .sync-synchronized, .sync-card-synchronized > i, .detail-sync-synchronized { background: var(--color-success); }
 .sync-legend .sync-pending, .sync-card-pending > i, .detail-sync-pending { background: var(--color-warning); }
 .sync-legend .sync-failed, .sync-card-failed > i, .detail-sync-failed { background: var(--color-danger); }
@@ -146,8 +147,12 @@
 .appointment-card.is-selected { border-color: var(--color-brand); box-shadow: inset 0 0 0 1px var(--color-brand); }
 .appointment-card strong { margin-top: 0.1rem; padding-right: 0.6rem; font-size: 0.58rem; line-height: 1.3; }
 .appointment-card small { color: var(--color-muted); font-size: 0.45rem; line-height: 1.45; }
+.appointment-state { width: max-content; margin-top: 0.2rem; padding: 0.2rem 0.38rem; border-radius: 999px; background: rgba(118, 87, 214, 0.12); color: #6043bd; font-size: 0.4rem; font-weight: 800; }
 .appointment-reference { color: var(--color-brand); font-size: 0.39rem; font-weight: 800; }
 .appointment-card > i { position: absolute; top: 0.65rem; right: 0.65rem; }
+.schedule-card-manager_review { border-color: rgba(118, 87, 214, 0.24); background: #f7f4ff; }
+.schedule-card-manager_review::before { background: #7657d6; }
+.schedule-card-manager_review:hover { border-color: rgba(118, 87, 214, 0.5); box-shadow: 0 12px 24px rgba(78, 53, 156, 0.12); }
 .sync-card-pending::before { background: var(--color-warning); }
 .sync-card-failed::before { background: var(--color-danger); }
 .day-empty { display: grid; min-height: 7rem; place-items: center; border: 1px dashed rgba(16, 32, 27, 0.09); border-radius: 0.7rem; color: rgba(81, 96, 89, 0.55); font-size: 0.45rem; }
@@ -173,6 +178,7 @@
 .schedule-facts dt { color: var(--color-muted); font-size: 0.44rem; }
 .schedule-facts dd { margin: 0; font-size: 0.52rem; font-weight: 800; }
 .text-confirmed, .text-successful, .text-synchronized { color: var(--color-success); }
+.text-manager_review { color: #6043bd; }
 .text-pending { color: var(--color-warning); }
 .text-failed { color: var(--color-danger); }
 

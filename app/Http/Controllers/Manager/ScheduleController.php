@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Manager;
 
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
+use App\Models\Repair;
 use App\Services\Manager\ActivityLogger;
 use App\Services\Manager\CalendarSyncRunner;
 use App\Services\Manager\ManagerPresenter;
@@ -77,10 +78,14 @@ class ScheduleController extends Controller
             'days' => $days,
             'selectedAppointment' => $selectedAppointment,
             'summary' => [
-                'confirmed' => $appointments->count(),
+                'confirmed' => $appointments->where('schedule_status.key', 'confirmed')->count(),
+                'manager_review' => $appointments->where('schedule_status.key', 'manager_review')->count(),
                 'today' => $appointments->filter(fn (array $appointment): bool => $appointment['appointment_at']->isToday())->count(),
                 'synchronized' => $appointments->where('calendar_status.key', 'synchronized')->count(),
-                'follow_up' => $appointments->whereIn('calendar_status.key', ['pending', 'failed'])->count(),
+                'follow_up' => $appointments
+                    ->where('schedule_status.key', 'confirmed')
+                    ->whereIn('calendar_status.key', ['pending', 'failed'])
+                    ->count(),
             ],
         ]);
     }
@@ -155,16 +160,29 @@ class ScheduleController extends Controller
     private function appointmentRecords(Carbon $weekStart, Carbon $weekEnd): Collection
     {
         $bookings = Booking::query()
-            ->with(['service', 'payment'])
-            ->where('booking_status', 'confirmed')
-            ->whereBetween('appointment_at', [$weekStart->toIso8601String(), $weekEnd->toIso8601String()])
+            ->with('service')
+            ->addSelect([
+                'manager_repair_status' => Repair::query()
+                    ->select('status')
+                    ->whereColumn('booking_id', 'bookings.id')
+                    ->limit(1),
+            ])
+            ->where(function ($query): void {
+                $query->where('booking_status', 'confirmed')
+                    ->orWhere(function ($review): void {
+                        $review->where('booking_status', 'pending')
+                            ->where('processing_method', 'review_required');
+                    });
+            })
+            ->whereBetween('appointment_at', [$weekStart->copy()->utc(), $weekEnd->copy()->utc()])
             ->orderBy('appointment_at')
             ->get();
 
-        $repairStatuses = ManagerPresenter::repairStatuses($bookings->pluck('id'));
-
         return $bookings
-            ->map(fn (Booking $booking): array => ManagerPresenter::booking($booking, $repairStatuses[$booking->id] ?? null))
+            ->map(fn (Booking $booking): array => ManagerPresenter::booking(
+                $booking,
+                $booking->getAttribute('manager_repair_status'),
+            ))
             ->values();
     }
 }

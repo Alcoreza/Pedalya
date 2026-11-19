@@ -231,7 +231,7 @@ class RepairsController extends Controller
     private function repairRecords(): Collection
     {
         return Repair::query()
-            ->with(['booking.service', 'booking.payment', 'arrivedBy', 'startedBy', 'completedBy', 'claimedBy'])
+            ->with(['booking.service', 'arrivedBy', 'startedBy', 'completedBy', 'claimedBy'])
             ->whereHas('booking', fn ($query) => $query->whereIn('booking_status', ['confirmed', 'completed']))
             ->get()
             ->map(fn (Repair $repair): array => ManagerPresenter::repair($repair))

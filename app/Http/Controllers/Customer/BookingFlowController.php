@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Payment;
 use App\Models\Service;
+use App\Services\Manager\ManagerPresenter;
 use App\Services\Bookings\BookingAvailabilityService;
 use App\Services\GoogleCalendarService;
 use Carbon\CarbonImmutable;
@@ -206,6 +207,8 @@ class BookingFlowController extends Controller
                 ->route('customer.schedule', ['date' => $startsAt->format('Y-m-d')])
                 ->withErrors(['time' => 'That appointment time was just taken. Please choose another slot.']);
         }
+
+        ManagerPresenter::forgetPendingBookings();
 
         if ($booking->booking_status === 'confirmed') {
             $this->googleCalendar->syncBooking($booking);

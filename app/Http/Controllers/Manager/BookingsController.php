@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Manager;
 
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
+use App\Models\Repair;
 use App\Services\Bookings\BookingCapacityPolicy;
 use App\Services\Manager\ActivityLogger;
 use App\Services\Manager\CalendarSyncRunner;
@@ -49,14 +50,16 @@ class BookingsController extends Controller
 
         $selectedReference = (string) $request->string('booking');
         $selectedBooking = $bookings->firstWhere('reference', $selectedReference) ?? $filteredBookings->first() ?? $bookings->first();
+        $pendingBookings = $bookings->where('booking_status.key', 'review_required')->count();
+        ManagerPresenter::cachePendingBookings($pendingBookings);
 
         return view('manager.bookings', [
             'manager' => $manager,
-            'navigation' => ['pending_bookings' => $bookings->where('booking_status.key', 'review_required')->count()],
+            'navigation' => ['pending_bookings' => $pendingBookings],
             'summary' => [
                 'all' => $bookings->count(),
                 'automatic' => $bookings->where('booking_status.key', 'confirmed')->where('processing_method.key', 'automatic')->count(),
-                'review' => $bookings->where('booking_status.key', 'review_required')->count(),
+                'review' => $pendingBookings,
                 'calendar_follow_up' => $bookings->whereIn('calendar_status.key', ['pending', 'failed'])->count(),
             ],
             'filters' => $filters,
@@ -83,10 +86,23 @@ class BookingsController extends Controller
             $record = Booking::query()->where('reference', $booking)->lockForUpdate()->firstOrFail();
             abort_unless($record->processing_method === 'review_required' && $record->booking_status === 'pending', 422, 'This booking no longer requires review.');
 
-            $record->update([
+            $changes = [
                 'booking_status' => $validated['decision'],
                 'processing_method' => 'manual',
-            ]);
+            ];
+
+            // A rejected review request is not an appointment and must never
+            // retain a sync state that could make it appear calendar-ready.
+            if (! $confirmed) {
+                $changes += [
+                    'calendar_status' => 'not_applicable',
+                    'calendar_event_id' => null,
+                    'calendar_sync_attempts' => 0,
+                ];
+            }
+
+            $record->update($changes);
+            ManagerPresenter::forgetPendingBookings();
 
             ActivityLogger::record(
                 eventKey: $confirmed ? 'booking.confirmed' : 'booking.rejected',
@@ -117,19 +133,29 @@ class BookingsController extends Controller
         }
 
         $managerName = $user?->name ?? 'Manager';
+        $appointment = $record->appointment_at
+            ->copy()
+            ->timezone(ManagerPresenter::timezone())
+            ->format('M j, Y \a\t g:i A');
 
         return redirect()->route('manager.bookings.index', ['booking' => $booking])->with(
             'booking_notice',
             $confirmed
-                ? "{$booking} was confirmed by {$managerName}."
-                : "{$booking} was rejected by {$managerName}."
+                ? "{$booking} for {$appointment} was confirmed by {$managerName}."
+                : "{$booking} for {$appointment} was rejected by {$managerName} and removed from the workshop schedule."
         );
     }
 
     private function bookingRecords(): Collection
     {
         $bookings = Booking::query()
-            ->with(['service', 'payment'])
+            ->with('service')
+            ->addSelect([
+                'manager_repair_status' => Repair::query()
+                    ->select('status')
+                    ->whereColumn('booking_id', 'bookings.id')
+                    ->limit(1),
+            ])
             ->where(function ($query): void {
                 $query->whereIn('booking_status', ['confirmed', 'rejected'])
                     ->orWhere(fn ($q) => $q->where('booking_status', 'pending')->where('processing_method', 'review_required'));
@@ -137,10 +163,11 @@ class BookingsController extends Controller
             ->latest('created_at')
             ->get();
 
-        $repairStatuses = ManagerPresenter::repairStatuses($bookings->pluck('id'));
-
         return $bookings
-            ->map(fn (Booking $booking): array => ManagerPresenter::booking($booking, $repairStatuses[$booking->id] ?? null))
+            ->map(fn (Booking $booking): array => ManagerPresenter::booking(
+                $booking,
+                $booking->getAttribute('manager_repair_status'),
+            ))
             ->values();
     }
 }

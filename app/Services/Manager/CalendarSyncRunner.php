@@ -37,6 +37,16 @@ final class CalendarSyncRunner
             return 'synchronized';
         }
 
+        $booking->loadMissing('user.googleCalendarConnection');
+
+        // No provider request is made without a connected calendar, so this
+        // must not consume a retry attempt or be reported as a failed sync.
+        if (! $booking->user?->googleCalendarConnection) {
+            $booking->forceFill(['calendar_status' => 'not_applicable'])->save();
+
+            return 'not_applicable';
+        }
+
         $errored = false;
 
         try {
