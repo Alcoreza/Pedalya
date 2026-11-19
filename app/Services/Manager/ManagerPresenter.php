@@ -155,7 +155,7 @@ final class ManagerPresenter
             'calendar_status' => ['key' => $calendarKey, 'label' => self::CALENDAR_LABELS[$calendarKey] ?? ucfirst($calendarKey)],
             'schedule_status' => ['key' => $scheduleKey, 'label' => self::SCHEDULE_LABELS[$scheduleKey]],
             'repair_status' => $repairStatus ? self::repairStatus($repairStatus) : null,
-            'calendar_event_id' => $booking->manager_calendar_event_id,
+            'calendar_event_id' => $booking->calendar_event_id,
             'sync_attempts' => (int) $booking->manager_calendar_sync_attempts,
         ];
     }
