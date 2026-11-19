@@ -5,6 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="description" content="Pedalya makes bike repair booking, scheduling, payment, and repair updates easier to manage in one place.">
 
+        @include('partials.favicon')
         <title>Pedalya | Bike repair, made simple</title>
 
         <link rel="preconnect" href="https://fonts.bunny.net">

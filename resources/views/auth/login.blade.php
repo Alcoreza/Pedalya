@@ -5,6 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="description" content="Sign in to Pedalya to manage your bike repair bookings and updates.">
 
+        @include('partials.favicon')
         <title>Log in | Pedalya</title>
 
         <link rel="preconnect" href="https://fonts.bunny.net">

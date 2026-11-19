@@ -5,6 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="description" content="Manage Pedalya repair status records and completion updates.">
 
+        @include('partials.favicon')
         <title>Repairs | Pedalya Manager</title>
 
         <link rel="preconnect" href="https://fonts.bunny.net">

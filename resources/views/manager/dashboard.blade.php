@@ -5,6 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="description" content="Pedalya manager dashboard for booking, schedule, repair, and integration monitoring.">
 
+        @include('partials.favicon')
         <title>Manager Dashboard | Pedalya</title>
 
         <link rel="preconnect" href="https://fonts.bunny.net">

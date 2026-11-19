@@ -5,6 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="description" content="Manage confirmed and under-review Pedalya repair appointments and calendar synchronization.">
 
+        @include('partials.favicon')
         <title>Schedule | Pedalya Manager</title>
 
         <link rel="preconnect" href="https://fonts.bunny.net">

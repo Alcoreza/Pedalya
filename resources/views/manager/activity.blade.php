@@ -5,6 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="description" content="Review Pedalya operational and integration activity records.">
 
+        @include('partials.favicon')
         <title>Activity | Pedalya Manager</title>
 
         <link rel="preconnect" href="https://fonts.bunny.net">

@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Choose a repair to view its current progress.">
+    @include('partials.favicon')
     <title>My repairs | Pedalya</title>
     <link rel="preconnect" href="https://fonts.bunny.net"><link href="https://fonts.googleapis.com/css?family=manrope:400,500,600,700,800" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/css/pages/customer-booking.css', 'resources/css/pages/customer-repairs.css', 'resources/css/pages/customer-typography.css', 'resources/js/app.js'])
