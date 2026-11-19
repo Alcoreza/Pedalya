@@ -24,12 +24,18 @@ class DashboardController extends Controller
         $weekEnd = $dashboardDate->copy()->endOfWeek(CarbonInterface::SUNDAY)->toIso8601String();
 
         $todayBookings = Booking::query()
-            ->with('service')
+            ->leftJoin('services as dashboard_services', 'dashboard_services.id', '=', 'bookings.service_id')
+            ->select(['bookings.*', 'dashboard_services.name as dashboard_service_name'])
+            ->addSelect([
+                'dashboard_repair_status' => Repair::query()
+                    ->select('status')
+                    ->whereColumn('booking_id', 'bookings.id')
+                    ->limit(1),
+            ])
             ->where('booking_status', 'confirmed')
             ->whereBetween('appointment_at', [$dayStart, $dayEnd])
             ->orderBy('appointment_at')
             ->get();
-        $repairStatuses = ManagerPresenter::repairStatuses($todayBookings->pluck('id'));
 
         $confirmedToday = $todayBookings->count();
         $upcoming = Booking::query()
@@ -41,21 +47,35 @@ class DashboardController extends Controller
         // is a slot reference rather than a hard cap on confirmed bookings.
         $dailyCapacity = max(1, (int) config('booking.daily_capacity', 6));
 
-        $pendingReview = ManagerPresenter::pendingBookings();
-        $pendingToday = Booking::query()
-            ->where('booking_status', 'pending')
-            ->where('processing_method', 'review_required')
-            ->whereBetween('created_at', [$dayStart, $dayEnd])
-            ->count();
+        // One aggregate replaces separate remote counts for the review badge
+        // and today's review total.
+        $pending = Booking::query()
+            ->selectRaw(
+                "count(*) filter (where booking_status = 'pending' and processing_method = 'review_required') as total,
+                 count(*) filter (where booking_status = 'pending' and processing_method = 'review_required' and created_at between ? and ?) as today",
+                [$dayStart, $dayEnd],
+            )
+            ->first();
+        $pendingReview = (int) ($pending->total ?? 0);
+        $pendingToday = (int) ($pending->today ?? 0);
+        ManagerPresenter::cachePendingBookings($pendingReview);
 
         // "Active" means the bike is physically in the workshop queue. The
         // Repairs page also lists awaiting_arrival under its Active tab; add
         // it here if you want the two screens to match exactly.
-        $activeRepairs = Repair::query()->whereIn('status', ['at_shop', 'in_progress'])->count();
-        $completedThisWeek = Repair::query()->whereBetween('completed_at', [$weekStart, $weekEnd])->count();
+        $repairSummary = Repair::query()
+            ->selectRaw(
+                "count(*) filter (where status in ('at_shop', 'in_progress')) as active,
+                 count(*) filter (where completed_at between ? and ?) as completed_this_week",
+                [$weekStart, $weekEnd],
+            )
+            ->first();
+        $activeRepairs = (int) ($repairSummary->active ?? 0);
+        $completedThisWeek = (int) ($repairSummary->completed_this_week ?? 0);
 
         $requests = Booking::query()
-            ->with('service')
+            ->leftJoin('services as request_services', 'request_services.id', '=', 'bookings.service_id')
+            ->select(['bookings.*', 'request_services.name as dashboard_service_name'])
             ->where(function ($query): void {
                 $query->where('booking_status', 'confirmed')
                     ->orWhere(fn ($q) => $q->where('booking_status', 'pending')->where('processing_method', 'review_required'));
@@ -67,7 +87,7 @@ class DashboardController extends Controller
                 'reference' => $booking->reference,
                 'customer' => $booking->customer_name,
                 'initials' => ManagerPresenter::initials($booking->customer_name),
-                'service' => $booking->service?->name ?? 'Repair service',
+                'service' => $booking->getAttribute('dashboard_service_name') ?? 'Repair service',
                 'schedule' => ManagerPresenter::shopTime($booking->appointment_at)->format('M d · g:i A'),
                 'status' => $booking->booking_status === 'confirmed' ? 'confirmed' : 'pending',
                 'time' => ManagerPresenter::shopTime($booking->created_at)->diffForHumans(),
@@ -75,15 +95,15 @@ class DashboardController extends Controller
             ->all();
 
         $appointments = $todayBookings
-            ->map(function (Booking $booking) use ($repairStatuses): array {
+            ->map(function (Booking $booking): array {
                 $at = ManagerPresenter::shopTime($booking->appointment_at);
-                $repair = $repairStatuses[$booking->id] ?? null;
+                $repair = $booking->getAttribute('dashboard_repair_status');
 
                 return [
                     'time' => $at->format('h:i'),
                     'period' => $at->format('A'),
                     'customer' => $booking->customer_name,
-                    'service' => $booking->service?->name ?? 'Repair service',
+                    'service' => $booking->getAttribute('dashboard_service_name') ?? 'Repair service',
                     'reference' => $booking->reference,
                     // Repair finished -> done, bike in the workshop -> current,
                     // anything else (including no repair row yet) -> next.
@@ -97,14 +117,15 @@ class DashboardController extends Controller
             ->all();
 
         $repairs = Repair::query()
-            ->with('booking.service')
-            ->where('status', 'in_progress')
-            ->orderBy('started_at')
+            ->join('bookings', 'bookings.id', '=', 'repairs.booking_id')
+            ->leftJoin('services', 'services.id', '=', 'bookings.service_id')
+            ->where('repairs.status', 'in_progress')
+            ->orderBy('repairs.started_at')
             ->limit(5)
-            ->get()
+            ->get(['repairs.status', 'bookings.reference', 'services.name as dashboard_service_name'])
             ->map(fn (Repair $repair): array => [
-                'reference' => $repair->booking->reference,
-                'service' => $repair->booking->service?->name ?? 'Repair service',
+                'reference' => $repair->getAttribute('reference'),
+                'service' => $repair->getAttribute('dashboard_service_name') ?? 'Repair service',
                 'status' => ManagerPresenter::repairStatus($repair->status)['label'],
             ])
             ->all();
