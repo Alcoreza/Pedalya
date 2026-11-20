@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Your Pedalya customer dashboard for bike repair bookings and updates.">
+    @include('partials.favicon')
     <title>Your dashboard | Pedalya</title>
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=manrope:400,500,600,700,800" rel="stylesheet" />
@@ -27,11 +28,24 @@
             <article class="dashboard-next-card">
                 <div class="dashboard-card-top"><span>Next appointment</span>
                     @if ($upcomingBooking)
-                        <span class="record-status {{ $upcomingBooking->booking_status === 'confirmed' ? 'status-success' : 'status-pending' }}"><i></i>{{ $upcomingBooking->booking_status === 'pending' && $upcomingBooking->processing_method === 'review_required' ? 'Awaiting approval' : \Illuminate\Support\Str::headline($upcomingBooking->booking_status) }}</span>
+                        @php
+                            $upcomingRepairStatus = $upcomingBooking->repair?->status;
+                            $upcomingStatusLabel = match ($upcomingRepairStatus) {
+                                'awaiting_arrival' => 'Awaiting arrival', 'at_shop' => 'Bike at shop',
+                                'in_progress' => 'Repair in progress', 'completed' => 'Repair completed', 'claimed' => 'Bike claimed',
+                                default => $upcomingBooking->booking_status === 'pending' && $upcomingBooking->processing_method === 'review_required'
+                                    ? 'Awaiting approval' : \Illuminate\Support\Str::headline($upcomingBooking->booking_status),
+                            };
+                            $upcomingStatusTone = in_array($upcomingRepairStatus, ['completed', 'claimed'], true)
+                                ? 'status-success' : ($upcomingRepairStatus === 'in_progress' ? 'status-brand' : ($upcomingBooking->booking_status === 'confirmed' ? 'status-success' : 'status-pending'));
+                        @endphp
+                        <span class="record-status {{ $upcomingStatusTone }}"><i></i>{{ $upcomingStatusLabel }}</span>
                     @endif
                 </div>
                 @if ($upcomingBooking)
-                    @php($upcomingAppointmentAt = $upcomingBooking->appointment_at->setTimezone(config('booking.timezone')))
+                    @php
+                        $upcomingAppointmentAt = $upcomingBooking->appointment_at->setTimezone(config('booking.timezone'));
+                    @endphp
                     <div class="dashboard-appointment">
                         <time class="dashboard-date" datetime="{{ $upcomingAppointmentAt->toIso8601String() }}"><small>{{ $upcomingAppointmentAt->format('D') }}</small><strong class="dashboard-date-number">{{ $upcomingAppointmentAt->format('d') }}</strong><span>{{ $upcomingAppointmentAt->format('M Y') }}</span></time>
                         <div><span class="dashboard-reference">{{ $upcomingBooking->reference }}</span><h2>{{ $upcomingBooking->service?->name ?? 'Repair service' }}</h2><p>{{ $upcomingAppointmentAt->format('g:i A') }} · Pedalya Bike Repair</p></div>
@@ -54,16 +68,32 @@
             <article class="recent-bookings-panel">
                 <div class="activity-intro"><div><span>Activity</span><h2>Booking activity</h2><p>Your latest repair bookings.</p></div><a href="{{ route('customer.bookings') }}"><span class="activity-link-label">View all</span></a></div>
                 <div class="activity-feed" aria-label="Recent booking activity">
-                    @forelse ($recentBookings as $booking)
-                        @php($localAppointmentAt = $booking->appointment_at->setTimezone(config('booking.timezone')))
+                    @foreach ($recentBookings as $booking)
+                        @php
+                            $localAppointmentAt = $booking->appointment_at->setTimezone(config('booking.timezone'));
+                        @endphp
+                        @php
+                            $repairStatus = $booking->repair?->status;
+                            $repairIsComplete = $booking->booking_status === 'completed' || in_array($repairStatus, ['completed', 'claimed'], true);
+                            $repairStatusLabel = match ($repairStatus) {
+                                'awaiting_arrival' => 'Awaiting arrival', 'at_shop' => 'Bike at shop',
+                                'in_progress' => 'Repair in progress', 'completed' => 'Repair completed', 'claimed' => 'Bike claimed',
+                                default => $booking->booking_status === 'pending' && $booking->processing_method === 'review_required'
+                                    ? 'Awaiting approval' : \Illuminate\Support\Str::headline($booking->booking_status),
+                            };
+                            $repairStatusTone = $repairIsComplete ? 'status-success'
+                                : ($repairStatus === 'in_progress' ? 'status-brand'
+                                    : (in_array($booking->booking_status, ['pending', 'rejected', 'cancelled'], true) ? 'status-pending' : 'status-brand'));
+                        @endphp
                         <a class="dashboard-booking-row" href="{{ route('customer.booking.detail', $booking->reference) }}">
-                            <div class="dashboard-row-icon {{ $booking->booking_status === 'completed' ? 'row-icon-complete' : '' }}" aria-hidden="true"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="14"></circle><circle cx="24" cy="24" r="4"></circle><path d="M24 10v10M24 28v10M10 24h10M28 24h10"></path></svg></div>
+                            <div class="dashboard-row-icon {{ $repairIsComplete ? 'row-icon-complete' : '' }}" aria-hidden="true"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="14"></circle><circle cx="24" cy="24" r="4"></circle><path d="M24 10v10M24 28v10M10 24h10M28 24h10"></path></svg></div>
                             <div class="dashboard-booking-copy"><strong>{{ $booking->service?->name ?? 'Repair service' }}</strong><span class="dashboard-booking-meta"><span class="dashboard-booking-reference">{{ $booking->reference }}</span><span class="dashboard-booking-divider" aria-hidden="true">·</span><span>{{ $localAppointmentAt->format('M d, g:i A') }}</span></span></div>
-                            <span class="record-status {{ $booking->booking_status === 'completed' ? 'status-success' : ($booking->booking_status === 'confirmed' ? 'status-brand' : 'status-pending') }}"><i></i>{{ $booking->booking_status === 'pending' && $booking->processing_method === 'review_required' ? 'Awaiting approval' : \Illuminate\Support\Str::headline($booking->booking_status) }}</span>
+                            <span class="record-status {{ $repairStatusTone }}"><i></i>{{ $repairStatusLabel }}</span>
                         </a>
-                    @empty
+                    @endforeach
+                    @if ($recentBookings->isEmpty())
                         <p>You haven’t made a booking yet. <a href="{{ route('customer.book') }}">Book your first repair.</a></p>
-                    @endforelse
+                    @endif
                 </div>
             </article>
             <article class="dashboard-panel dashboard-location-panel">

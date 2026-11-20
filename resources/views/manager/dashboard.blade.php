@@ -5,6 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="description" content="Pedalya manager dashboard for booking, schedule, repair, and integration monitoring.">
 
+        @include('partials.favicon')
         <title>Manager Dashboard | Pedalya</title>
 
         <link rel="preconnect" href="https://fonts.bunny.net">
@@ -135,14 +136,14 @@
                         <a href="{{ route('manager.schedule.index') }}">View today’s schedule <span aria-hidden="true">→</span></a>
                     </div>
 
-                    <div class="control-dial" aria-label="{{ $dailySummary['confirmed'] }} of {{ $dailySummary['capacity'] }} daily appointments confirmed">
+                    <div class="control-dial" aria-label="{{ $dailySummary['confirmed'] }} confirmed appointments today across {{ $dailySummary['capacity'] }} scheduled daily time slots">
                         <svg viewBox="0 0 160 160" aria-hidden="true">
                             <circle class="dial-base" cx="80" cy="80" r="63"></circle>
                             <circle class="dial-progress" pathLength="100" style="--schedule-progress: {{ $dailySummary['percentage'] }}" cx="80" cy="80" r="63"></circle>
                         </svg>
                         <div>
                             <strong>{{ $dailySummary['confirmed'] }}<span>/{{ $dailySummary['capacity'] }}</span></strong>
-                            <small>confirmed today</small>
+                            <small>confirmed / daily slots</small>
                         </div>
                     </div>
 

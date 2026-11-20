@@ -3,13 +3,18 @@
 namespace App\Http\Controllers\Manager;
 
 use App\Http\Controllers\Controller;
+use App\Models\Booking;
+use App\Models\Repair;
+use App\Services\Manager\ActivityLogger;
+use App\Services\Manager\CalendarSyncRunner;
+use App\Services\Manager\ManagerPresenter;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 class ScheduleController extends Controller
 {
@@ -20,19 +25,15 @@ class ScheduleController extends Controller
             'booking' => ['nullable', 'string', 'max:40'],
         ]);
 
+        // Week boundaries are computed in the shop timezone, then queried as
+        // absolute instants, so late-Sunday bookings land in the right week.
+        $timezone = ManagerPresenter::timezone();
         $selectedDate = isset($validated['date'])
-            ? Carbon::createFromFormat('Y-m-d', $validated['date'])->startOfDay()
-            : now()->startOfDay();
+            ? Carbon::createFromFormat('Y-m-d', $validated['date'], $timezone)->startOfDay()
+            : ManagerPresenter::now()->startOfDay();
         $weekStart = $selectedDate->copy()->startOfWeek(CarbonInterface::MONDAY);
-        $managerName = auth()->user()?->name ?? 'Elmer Daniel';
-        $appointments = $this->appointmentRecords($weekStart);
-        $syncOverrides = $request->session()->get('manager_calendar_sync_overrides', []);
-
-        $appointments = $appointments->map(function (array $appointment) use ($syncOverrides): array {
-            $override = $syncOverrides[$appointment['reference']] ?? [];
-
-            return array_replace($appointment, $override);
-        });
+        $weekEnd = $weekStart->copy()->endOfWeek(CarbonInterface::SUNDAY);
+        $appointments = $this->appointmentRecords($weekStart, $weekEnd);
 
         $days = collect(range(0, 6))->map(function (int $offset) use ($weekStart, $appointments): array {
             $date = $weekStart->copy()->addDays($offset);
@@ -63,156 +64,132 @@ class ScheduleController extends Controller
         $selectedReference = $validated['booking'] ?? null;
         $selectedAppointment = $appointments->firstWhere('reference', $selectedReference)
             ?? $appointments->sortBy('appointment_at')->first();
+        $managerCalendarConnection = $request->user()->googleCalendarConnection;
+        $expectedManagerEmail = (string) config('services.google_calendar.manager_email', '');
+        $managerCalendarConnection = $managerCalendarConnection
+            && strcasecmp($managerCalendarConnection->google_email, $expectedManagerEmail) === 0
+                ? $managerCalendarConnection
+                : null;
 
         return view('manager.schedule', [
-            'manager' => [
-                'name' => $managerName,
-                'initials' => $this->initials($managerName),
-                'role' => 'Manager',
-            ],
+            'manager' => ManagerPresenter::manager($request->user()),
+            'managerCalendarConnection' => $managerCalendarConnection,
             'navigation' => [
-                'pending_bookings' => 2,
+                'pending_bookings' => ManagerPresenter::pendingBookings(),
             ],
             'selectedDate' => $selectedDate,
             'weekStart' => $weekStart,
-            'weekEnd' => $weekStart->copy()->endOfWeek(CarbonInterface::SUNDAY),
+            'weekEnd' => $weekEnd,
             'previousWeek' => $weekStart->copy()->subWeek(),
             'nextWeek' => $weekStart->copy()->addWeek(),
             'days' => $days,
             'selectedAppointment' => $selectedAppointment,
             'summary' => [
-                'confirmed' => $appointments->count(),
+                'confirmed' => $appointments->where('schedule_status.key', 'confirmed')->count(),
+                'manager_review' => $appointments->where('schedule_status.key', 'manager_review')->count(),
                 'today' => $appointments->filter(fn (array $appointment): bool => $appointment['appointment_at']->isToday())->count(),
                 'synchronized' => $appointments->where('calendar_status.key', 'synchronized')->count(),
-                'follow_up' => $appointments->whereIn('calendar_status.key', ['pending', 'failed'])->count(),
+                'follow_up' => $appointments
+                    ->where('schedule_status.key', 'confirmed')
+                    ->whereIn('calendar_status.key', ['pending', 'failed'])
+                    ->count(),
             ],
         ]);
     }
 
-    public function retryCalendarSync(Request $request, string $booking): RedirectResponse
+    public function retryCalendarSync(Request $request, string $booking, CalendarSyncRunner $calendarSync): RedirectResponse
     {
         $validated = $request->validate([
             'date' => ['required', 'date_format:Y-m-d'],
         ]);
 
-        $knownReferences = ['PDL-1041', 'PDL-1042', 'PDL-1053', 'PDL-1054', 'PDL-1046', 'PDL-1045', 'PDL-1050'];
-        abort_unless(in_array($booking, $knownReferences, true), 404);
+        $user = $request->user();
+        $record = Booking::query()->where('reference', $booking)->firstOrFail();
 
-        $overrides = $request->session()->get('manager_calendar_sync_overrides', []);
-        $defaultAttempts = $booking === 'PDL-1045' ? 1 : 0;
-        $attempts = min(3, ((int) ($overrides[$booking]['sync_attempts'] ?? $defaultAttempts)) + 1);
-
-        // Temporary session state keeps the frontend contract testable. Replace
-        // this with the Calendar synchronization service/queued job. That service
-        // must check for an existing event before each retry and stop after three.
-        $overrides[$booking] = [
-            'calendar_status' => ['key' => 'pending', 'label' => 'Pending sync'],
-            'sync_attempts' => $attempts,
-        ];
-        $request->session()->put('manager_calendar_sync_overrides', $overrides);
-
-        return redirect()
+        $back = fn (string $notice): RedirectResponse => redirect()
             ->route('manager.schedule.index', ['date' => $validated['date'], 'booking' => $booking])
-            ->with('schedule_notice', "Calendar follow-up for {$booking} is queued. The confirmed booking remains unchanged.");
+            ->with('schedule_notice', $notice);
+
+        // Lock, validate and mark pending in one transaction. Marking the row
+        // pending also blocks a second manager from starting a parallel retry.
+        $rejection = DB::transaction(function () use ($record, $user): ?string {
+            $locked = Booking::query()->whereKey($record->id)->lockForUpdate()->firstOrFail();
+
+            if ($locked->booking_status !== 'confirmed') {
+                return 'Calendar follow-up is only available for confirmed bookings.';
+            }
+
+            if ($locked->manager_calendar_status !== 'failed') {
+                return "Calendar follow-up for {$locked->reference} is not needed right now.";
+            }
+
+            if ((int) $locked->manager_calendar_sync_attempts >= CalendarSyncRunner::MAX_ATTEMPTS) {
+                return 'The retry limit was reached. Contact support to link this appointment manually.';
+            }
+
+            $next = (int) $locked->manager_calendar_sync_attempts + 1;
+            $locked->forceFill(['manager_calendar_status' => 'pending'])->save();
+
+            ActivityLogger::record(
+                eventKey: 'calendar.retry.queued',
+                category: 'calendar',
+                result: 'pending',
+                title: 'Calendar retry queued',
+                summary: 'A safe retry was requested for a confirmed booking.',
+                detail: 'The synchronization service checks whether the event already exists before creating another event.',
+                booking: $locked,
+                metadata: [
+                    'Attempt' => $next.' of '.CalendarSyncRunner::MAX_ATTEMPTS,
+                    'Duplicate check' => 'Required',
+                    'Booking status' => 'Confirmed',
+                ],
+                provider: 'Google Calendar',
+                actor: $user,
+                source: 'manager',
+            );
+
+            return null;
+        });
+
+        if ($rejection !== null) {
+            return $back($rejection);
+        }
+
+        // The external call runs outside the transaction. Any failure is
+        // recorded on the calendar fields and never touches booking_status.
+        $status = $calendarSync->run($record, $user);
+
+        return $back($status === 'synchronized'
+            ? "Calendar follow-up for {$booking} completed. The confirmed booking remains unchanged."
+            : "Calendar follow-up for {$booking} is queued. The confirmed booking remains unchanged.");
     }
 
-    private function appointmentRecords(Carbon $weekStart): Collection
+    private function appointmentRecords(Carbon $weekStart, Carbon $weekEnd): Collection
     {
-        return collect([
-            [
-                'reference' => 'PDL-1041',
-                'customer' => ['name' => 'Lia Mendoza', 'initials' => 'LM', 'email' => 'lia.mendoza@example.com', 'phone' => '+63 917 000 1041'],
-                'service' => 'General tune-up',
-                'appointment_at' => $weekStart->copy()->setTime(9, 0),
-                'booking_status' => ['key' => 'confirmed', 'label' => 'Confirmed'],
-                'payment_status' => ['key' => 'successful', 'label' => 'Successful'],
-                'calendar_status' => ['key' => 'synchronized', 'label' => 'Synchronized'],
-                'repair_status' => null,
-                'calendar_event_id' => 'gcal_pdl_1041',
-                'sync_attempts' => 0,
-            ],
-            [
-                'reference' => 'PDL-1042',
-                'customer' => ['name' => 'Paolo Tan', 'initials' => 'PT', 'email' => 'paolo.tan@example.com', 'phone' => '+63 917 000 1042'],
-                'service' => 'Brake inspection',
-                'appointment_at' => $weekStart->copy()->addDay()->setTime(11, 30),
-                'booking_status' => ['key' => 'confirmed', 'label' => 'Confirmed'],
-                'payment_status' => ['key' => 'pending', 'label' => 'Pending'],
-                'calendar_status' => ['key' => 'synchronized', 'label' => 'Synchronized'],
-                'repair_status' => null,
-                'calendar_event_id' => 'gcal_pdl_1042',
-                'sync_attempts' => 0,
-            ],
-            [
-                'reference' => 'PDL-1053',
-                'customer' => ['name' => 'Jules Aquino', 'initials' => 'JA', 'email' => 'jules.aquino@example.com', 'phone' => '+63 917 000 1053'],
-                'service' => 'Safety inspection',
-                'appointment_at' => $weekStart->copy()->addDay()->setTime(11, 30),
-                'booking_status' => ['key' => 'confirmed', 'label' => 'Confirmed'],
-                'payment_status' => ['key' => 'successful', 'label' => 'Successful'],
-                'calendar_status' => ['key' => 'synchronized', 'label' => 'Synchronized'],
-                'repair_status' => null,
-                'calendar_event_id' => 'gcal_pdl_1053',
-                'sync_attempts' => 0,
-            ],
-            [
-                'reference' => 'PDL-1054',
-                'customer' => ['name' => 'Carlo Reyes', 'initials' => 'CR', 'email' => 'carlo.reyes@example.com', 'phone' => '+63 917 000 1054'],
-                'service' => 'Wheel alignment',
-                'appointment_at' => $weekStart->copy()->addDay()->setTime(14, 0),
-                'booking_status' => ['key' => 'confirmed', 'label' => 'Confirmed'],
-                'payment_status' => ['key' => 'pending', 'label' => 'Pending'],
-                'calendar_status' => ['key' => 'pending', 'label' => 'Pending sync'],
-                'repair_status' => null,
-                'calendar_event_id' => null,
-                'sync_attempts' => 0,
-            ],
-            [
-                'reference' => 'PDL-1046',
-                'customer' => ['name' => 'Bea Cruz', 'initials' => 'BC', 'email' => 'bea.cruz@example.com', 'phone' => '+63 917 000 1046'],
-                'service' => 'General tune-up',
-                'appointment_at' => $weekStart->copy()->addDays(2)->setTime(13, 0),
-                'booking_status' => ['key' => 'confirmed', 'label' => 'Confirmed'],
-                'payment_status' => ['key' => 'successful', 'label' => 'Successful'],
-                'calendar_status' => ['key' => 'synchronized', 'label' => 'Synchronized'],
-                'repair_status' => null,
-                'calendar_event_id' => 'gcal_pdl_1046',
-                'sync_attempts' => 0,
-            ],
-            [
-                'reference' => 'PDL-1045',
-                'customer' => ['name' => 'Nico Santos', 'initials' => 'NS', 'email' => 'nico.santos@example.com', 'phone' => '+63 917 000 1045'],
-                'service' => 'Chain replacement',
-                'appointment_at' => $weekStart->copy()->addDays(4)->setTime(10, 0),
-                'booking_status' => ['key' => 'confirmed', 'label' => 'Confirmed'],
-                'payment_status' => ['key' => 'pending', 'label' => 'Pending'],
-                'calendar_status' => ['key' => 'failed', 'label' => 'Failed'],
-                'repair_status' => null,
-                'calendar_event_id' => null,
-                'sync_attempts' => 1,
-            ],
-            [
-                'reference' => 'PDL-1050',
-                'customer' => ['name' => 'Sam Villanueva', 'initials' => 'SV', 'email' => 'sam.villanueva@example.com', 'phone' => '+63 917 000 1050'],
-                'service' => 'Brake inspection',
-                'appointment_at' => $weekStart->copy()->addDays(5)->setTime(13, 30),
-                'booking_status' => ['key' => 'confirmed', 'label' => 'Confirmed'],
-                'payment_status' => ['key' => 'pending', 'label' => 'Pending'],
-                'calendar_status' => ['key' => 'pending', 'label' => 'Pending sync'],
-                'repair_status' => null,
-                'calendar_event_id' => null,
-                'sync_attempts' => 0,
-            ],
-        ]);
-    }
+        $bookings = Booking::query()
+            ->with('service')
+            ->addSelect([
+                'manager_repair_status' => Repair::query()
+                    ->select('status')
+                    ->whereColumn('booking_id', 'bookings.id')
+                    ->limit(1),
+            ])
+            ->where(function ($query): void {
+                $query->where('booking_status', 'confirmed')
+                    ->orWhere(function ($review): void {
+                        $review->where('booking_status', 'pending')
+                            ->where('processing_method', 'review_required');
+                    });
+            })
+            ->whereBetween('appointment_at', [$weekStart->copy()->utc(), $weekEnd->copy()->utc()])
+            ->orderBy('appointment_at')
+            ->get();
 
-    private function initials(string $name): string
-    {
-        return Str::of($name)
-            ->explode(' ')
-            ->filter()
-            ->take(2)
-            ->map(fn (string $part) => Str::upper(Str::substr($part, 0, 1)))
-            ->implode('');
+        return $bookings
+            ->map(fn (Booking $booking): array => ManagerPresenter::booking(
+                $booking,
+                $booking->getAttribute('manager_repair_status'),
+            ))
+            ->values();
     }
 }

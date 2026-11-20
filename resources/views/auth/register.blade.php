@@ -5,6 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="description" content="Create your Pedalya account and begin managing bike repair bookings in one place.">
 
+        @include('partials.favicon')
         <title>Create an account | Pedalya</title>
 
         <link rel="preconnect" href="https://fonts.bunny.net">

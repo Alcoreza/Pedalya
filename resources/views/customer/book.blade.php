@@ -5,6 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="description" content="Choose a bike repair service to begin your Pedalya booking.">
 
+        @include('partials.favicon')
         <title>Book a repair | Pedalya</title>
 
         <link rel="preconnect" href="https://fonts.bunny.net">

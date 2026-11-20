@@ -3,8 +3,9 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="description" content="Manage confirmed Pedalya repair appointments and calendar synchronization.">
+        <meta name="description" content="Manage confirmed and under-review Pedalya repair appointments and calendar synchronization.">
 
+        @include('partials.favicon')
         <title>Schedule | Pedalya Manager</title>
 
         <link rel="preconnect" href="https://fonts.bunny.net">
@@ -95,6 +96,19 @@
                     </div>
 
                     <div class="topbar-actions">
+                        @if ($managerCalendarConnection)
+                            <div class="topbar-calendar-connection" aria-label="Google Calendar connected">
+                                <span class="topbar-calendar-status"><span aria-hidden="true"></span>Connected</span>
+                                <span class="topbar-calendar-email">{{ $managerCalendarConnection->google_email }}</span>
+                            </div>
+                            <form method="POST" action="{{ route('manager.calendar.disconnect') }}">
+                                @csrf
+                                @method('DELETE')
+                                <button class="topbar-calendar-disconnect" type="submit">Disconnect</button>
+                            </form>
+                        @else
+                            <a class="topbar-calendar-connect" href="{{ route('manager.calendar.connect') }}">Connect Google Calendar <span aria-hidden="true">&#8599;</span></a>
+                        @endif
                         <a class="topbar-primary" href="{{ route('manager.bookings.index') }}">Review bookings <span aria-hidden="true">↗</span></a>
                     </div>
                 </header>
@@ -136,10 +150,10 @@
                 <div class="schedule-workspace schedule-enter" style="--enter-delay: 190ms">
                     <section class="week-board" aria-labelledby="week-board-title">
                         <div class="board-heading">
-                            <div><span>Confirmed schedule</span><h2 id="week-board-title">Seven-day view</h2></div>
-                            <div class="sync-legend" aria-label="Calendar synchronization legend">
+                            <div><span>Workshop schedule</span><h2 id="week-board-title">Seven-day view</h2></div>
+                            <div class="sync-legend" aria-label="Schedule and calendar status legend">
+                                <span><i class="schedule-manager-review"></i> Manager review</span>
                                 <span><i class="sync-synchronized"></i> Synced</span>
-                                <span><i class="sync-pending"></i> Pending</span>
                                 <span><i class="sync-failed"></i> Failed</span>
                             </div>
                         </div>
@@ -167,11 +181,16 @@
                                                 </header>
                                                 <div class="slot-bookings">
                                                     @foreach ($slot['appointments'] as $appointment)
-                                                        <a class="appointment-card sync-card-{{ $appointment['calendar_status']['key'] }} {{ $selectedAppointment['reference'] === $appointment['reference'] ? 'is-selected' : '' }}" href="{{ route('manager.schedule.index', ['date' => $selectedDate->toDateString(), 'booking' => $appointment['reference']]) }}" aria-label="View appointment {{ $appointment['reference'] }} at {{ $appointment['appointment_at']->format('g:i A') }}">
+                                                        <a class="appointment-card schedule-card-{{ $appointment['schedule_status']['key'] }} sync-card-{{ $appointment['calendar_status']['key'] }} {{ $selectedAppointment['reference'] === $appointment['reference'] ? 'is-selected' : '' }}" href="{{ route('manager.schedule.index', ['date' => $selectedDate->toDateString(), 'booking' => $appointment['reference']]) }}" aria-label="View {{ strtolower($appointment['schedule_status']['label']) }} booking {{ $appointment['reference'] }} at {{ $appointment['appointment_at']->format('g:i A') }}">
                                                             <span class="appointment-reference">{{ $appointment['reference'] }}</span>
                                                             <strong>{{ $appointment['customer']['name'] }}</strong>
                                                             <small>{{ $appointment['service'] }}</small>
-                                                            <i aria-label="Calendar {{ $appointment['calendar_status']['label'] }}"></i>
+                                                            @if ($appointment['schedule_status']['key'] === 'manager_review')
+                                                                <span class="appointment-state">Manager review</span>
+                                                                <i aria-label="Manager review"></i>
+                                                            @else
+                                                                <i aria-label="Calendar {{ $appointment['calendar_status']['label'] }}"></i>
+                                                            @endif
                                                         </a>
                                                     @endforeach
                                                 </div>
@@ -189,7 +208,7 @@
                         <aside class="schedule-detail" aria-labelledby="appointment-detail-title">
                             <div class="detail-topline">
                                 <span>Appointment detail</span>
-                                <i class="detail-sync detail-sync-{{ $selectedAppointment['calendar_status']['key'] }}" aria-hidden="true"></i>
+                                <i class="detail-sync {{ $selectedAppointment['schedule_status']['key'] === 'manager_review' ? 'detail-schedule-manager-review' : 'detail-sync-'.$selectedAppointment['calendar_status']['key'] }}" aria-hidden="true"></i>
                             </div>
 
                             <div class="detail-title">
@@ -207,12 +226,11 @@
                                 <div>
                                     <span>Start time</span>
                                     <strong>{{ $selectedAppointment['appointment_at']->format('g:i A') }}</strong>
-                                    <small>End time not configured</small>
                                 </div>
                             </div>
 
                             <dl class="schedule-facts">
-                                <div><dt>Booking</dt><dd class="text-confirmed">{{ $selectedAppointment['booking_status']['label'] }}</dd></div>
+                                <div><dt>Booking</dt><dd class="text-{{ $selectedAppointment['schedule_status']['key'] }}">{{ $selectedAppointment['schedule_status']['label'] }}</dd></div>
                                 <div><dt>Payment</dt><dd class="text-{{ $selectedAppointment['payment_status']['key'] }}">{{ $selectedAppointment['payment_status']['label'] }}</dd></div>
                                 <div><dt>Calendar</dt><dd class="text-{{ $selectedAppointment['calendar_status']['key'] }}">{{ $selectedAppointment['calendar_status']['label'] }}</dd></div>
                                 <div><dt>Repair</dt><dd>{{ $selectedAppointment['repair_status']['label'] ?? 'Not yet recorded' }}</dd></div>
@@ -229,15 +247,21 @@
 
                             <div class="calendar-contract">
                                 <span>Google Calendar</span>
-                                @if ($selectedAppointment['calendar_event_id'])
+                                @if ($selectedAppointment['schedule_status']['key'] === 'manager_review')
+                                    <strong>Waiting for manager decision</strong>
+                                    <small>No Google Calendar event will be created unless this request is confirmed.</small>
+                                @elseif ($selectedAppointment['calendar_event_id'])
                                     <strong>Event linked</strong>
                                     <small>{{ $selectedAppointment['calendar_event_id'] }}</small>
                                 @elseif ($selectedAppointment['calendar_status']['key'] === 'failed')
                                     <strong>Synchronization failed</strong>
                                     <small>Attempt {{ $selectedAppointment['sync_attempts'] }} of 3. The booking remains confirmed.</small>
-                                @else
+                                @elseif ($selectedAppointment['calendar_status']['key'] === 'pending')
                                     <strong>Synchronization pending</strong>
                                     <small>The booking remains confirmed while the backend completes synchronization.</small>
+                                @else
+                                    <strong>Not connected</strong>
+                                    <small>No calendar synchronization is required for this booking.</small>
                                 @endif
                             </div>
 

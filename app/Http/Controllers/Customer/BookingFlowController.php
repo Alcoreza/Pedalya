@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Payment;
 use App\Models\Service;
+use App\Services\Manager\ManagerPresenter;
 use App\Services\Bookings\BookingAvailabilityService;
 use App\Services\GoogleCalendarService;
+use App\Services\Manager\CalendarSyncRunner;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,6 +23,7 @@ class BookingFlowController extends Controller
     public function __construct(
         private readonly BookingAvailabilityService $availability,
         private readonly GoogleCalendarService $googleCalendar,
+        private readonly CalendarSyncRunner $managerCalendar,
     )
     {
     }
@@ -207,8 +210,11 @@ class BookingFlowController extends Controller
                 ->withErrors(['time' => 'That appointment time was just taken. Please choose another slot.']);
         }
 
+        ManagerPresenter::forgetPendingBookings();
+
         if ($booking->booking_status === 'confirmed') {
             $this->googleCalendar->syncBooking($booking);
+            $this->managerCalendar->run($booking, $request->user());
         }
 
         $request->session()->forget('booking_flow');

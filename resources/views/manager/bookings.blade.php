@@ -5,6 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="description" content="Review and manage Pedalya customer booking requests.">
 
+        @include('partials.favicon')
         <title>Bookings | Pedalya Manager</title>
 
         <link rel="preconnect" href="https://fonts.bunny.net">

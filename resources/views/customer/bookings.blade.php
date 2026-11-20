@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="View your Pedalya bike repair bookings and statuses.">
+    @include('partials.favicon')
     <title>My bookings | Pedalya</title>
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=manrope:400,500,600,700,800" rel="stylesheet" />
@@ -36,13 +37,26 @@
             @forelse ($bookings as $booking)
                 @php
                     $appointmentAt = $booking->appointment_at->setTimezone(config('booking.timezone'));
-                    $isCompleted = $booking->booking_status === 'completed';
+                    $isCompleted = $booking->booking_status === 'completed'
+                        || in_array($booking->repair?->status, ['completed', 'claimed'], true);
                     $bookingLabel = $booking->booking_status === 'pending' && $booking->processing_method === 'review_required'
                         ? 'Awaiting approval'
                         : ($booking->booking_status === 'confirmed' ? 'Confirmed' : \Illuminate\Support\Str::headline($booking->booking_status));
                     $paymentLabel = $booking->payment_status === 'paid' ? 'Paid' : \Illuminate\Support\Str::headline($booking->payment_status);
                     $bookingTone = in_array($booking->booking_status, ['rejected', 'cancelled'], true) ? 'pending' : ($isCompleted || $booking->booking_status === 'confirmed' ? 'success' : 'pending');
                     $paymentTone = $booking->payment_status === 'paid' ? 'success' : 'pending';
+                    $repairStatus = $booking->repair?->status;
+                    $repairLabel = match ($repairStatus) {
+                        'awaiting_arrival' => 'Awaiting arrival',
+                        'at_shop' => 'Bike at shop',
+                        'in_progress' => 'Repair in progress',
+                        'completed' => 'Repair completed',
+                        'claimed' => 'Bike claimed',
+                        default => $isCompleted ? 'Completed' : 'Not started',
+                    };
+                    $repairTone = in_array($repairStatus, ['completed', 'claimed'], true) || $isCompleted
+                        ? 'success'
+                        : ($repairStatus === 'in_progress' ? 'brand' : 'neutral');
                 @endphp
                 <article class="booking-record" data-booking-card data-group="{{ $isCompleted ? 'completed' : 'active' }}">
                     <div class="booking-record-main">
@@ -52,7 +66,7 @@
                     <div class="booking-record-statuses" aria-label="Booking status details">
                         <div class="booking-status-item"><small>Booking</small><span class="record-status status-{{ $bookingTone }}"><i></i><span class="status-label">{{ $bookingLabel }}</span></span></div>
                         <div class="booking-status-item"><small>Payment</small><span class="record-status status-{{ $paymentTone }}"><i></i><span class="status-label">{{ $paymentLabel }}</span></span></div>
-                        <div class="booking-status-item"><small>Repair</small><span class="record-status status-{{ $isCompleted ? 'success' : 'neutral' }}"><i></i><span class="status-label">{{ $isCompleted ? 'Completed' : 'Not started' }}</span></span></div>
+                        <div class="booking-status-item"><small>Repair</small><span class="record-status status-{{ $repairTone }}"><i></i><span class="status-label">{{ $repairLabel }}</span></span></div>
                     </div>
                     <a class="record-view-link" href="{{ route('customer.booking.detail', $booking->reference) }}" aria-label="View booking {{ $booking->reference }}"><span class="record-view-content"><span>View booking</span><span class="record-view-arrow" aria-hidden="true">→</span></span></a>
                 </article>
